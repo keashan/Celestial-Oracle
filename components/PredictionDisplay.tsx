@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { PredictionData, Language } from '../types';
+import { PredictionData, Language } from '../types.ts';
 
 interface PredictionDisplayProps {
   prediction: PredictionData;

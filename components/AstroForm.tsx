@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { UserDetails, Language } from '../types';
+import { UserDetails, Language } from '../types.ts';
 
 interface AstroFormProps {
   onSubmit: (details: UserDetails) => void;

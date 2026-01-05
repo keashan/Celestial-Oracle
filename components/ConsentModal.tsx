@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Language } from '../types';
+import { Language } from '../types.ts';
 
 interface ConsentModalProps {
   onAccept: () => void;
@@ -22,7 +22,7 @@ const translations = {
     intro: "තවදුරටත් ඉදිරියට යාමට පෙර කරුණාකර පහත කරුණු කියවා එකඟ වන්න:",
     item1: "ඔබේ උපන් විස්තර අනාවැකි ජනනය කිරීම සඳහා Google Gemini AI මගින් process කරනු ලැබේ.",
     item2: "මෙම සේවාව විනෝදාස්වාදය සහ තොරතුරු දැනගැනීම සඳහා පමණි.",
-    item3: "අපි ඔබේ පෞද්ගලික දත්ත මෙම සැසියෙන් ඔබ්බට අපගේ server වල ගබඩා කරනු නොලැබේ.",
+    item3: "අපි ඔබේ පෞද්ගලික දත්ත මෙම සැසියෙන් ඔබබට අපගේ server වල ගබඩා කරනු නොලැබේ.",
     btn: "Oracle වෙත පිවිසෙන්න"
   }
 };

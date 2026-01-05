@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { UserDetails, PredictionData, Language, Message } from "../types";
+import { UserDetails, PredictionData, Language, Message } from "../types.ts";
 
 /**
  * Generates the initial 12-month astrology prediction using Gemini 3 Flash.

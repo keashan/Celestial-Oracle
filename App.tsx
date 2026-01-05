@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { UserDetails, PredictionData, Language } from './types';
-import { getAstrologyPrediction } from './services/geminiService';
-import AstroForm from './components/AstroForm';
-import PredictionDisplay from './components/PredictionDisplay';
-import ChatInterface from './components/ChatInterface';
-import Header from './components/Header';
-import Loader from './components/Loader';
-import ConsentModal from './components/ConsentModal';
+import { UserDetails, PredictionData, Language } from './types.ts';
+import { getAstrologyPrediction } from './services/geminiService.ts';
+import AstroForm from './components/AstroForm.tsx';
+import PredictionDisplay from './components/PredictionDisplay.tsx';
+import ChatInterface from './components/ChatInterface.tsx';
+import Header from './components/Header.tsx';
+import Loader from './components/Loader.tsx';
+import ConsentModal from './components/ConsentModal.tsx';
 
 const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
