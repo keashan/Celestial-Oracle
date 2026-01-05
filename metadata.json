@@ -1,0 +1,5 @@
+{
+  "name": "Cosmic Oracle",
+  "description": "A personalized astrology application that provides 12-month predictions and an interactive chat based on your unique birth chart details.",
+  "requestFramePermissions": []
+}
