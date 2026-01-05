@@ -19,10 +19,10 @@ const translations = {
   },
   si: {
     title: "Celestial Agreement",
-    intro: "Before we consult the stars, please acknowledge the following:",
-    item1: "ඔබේ උපන් විස්තර අනාවැකි ජනනය කිරීම සඳහා Google Gemini AI මගින් සකසනු ලැබේ.",
+    intro: "තවදුරටත් ඉදිරියට යාමට පෙර කරුණාකර පහත කරුණු කියවා එකඟ වන්න:",
+    item1: "ඔබේ උපන් විස්තර අනාවැකි ජනය කිරීම සඳහා Google Gemini AI මගින් process කරනු ලැබේ.",
     item2: "මෙම සේවාව විනෝදාස්වාදය සහ තොරතුරු දැනගැනීම සඳහා පමණි.",
-    item3: "අපි ඔබේ පෞද්ගලික දත්ත මෙම සැසියෙන් ඔබ්බට අපගේ සේවාදායකයන්හි ගබඩා නොකරමු.",
+    item3: "අපි ඔබේ පෞද්ගලික දත්ත මෙම සැසියෙන් ඔබ්බට අපගේ server වල ගබඩා කරනු නොලැබේ.",
     btn: "ඇතුල් වන්න"
   }
 };

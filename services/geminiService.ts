@@ -2,6 +2,9 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { UserDetails, PredictionData, Language, Message } from "../types";
 
+/**
+ * Generates the initial 12-month astrology prediction using Gemini 3 Flash.
+ */
 export async function getAstrologyPrediction(details: UserDetails): Promise<PredictionData> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const currentDate = new Date();
@@ -10,20 +13,20 @@ export async function getAstrologyPrediction(details: UserDetails): Promise<Pred
   const currentYear = currentDate.getFullYear();
 
   const langInstruction = details.language === 'si' 
-    ? "All output text MUST be in Sinhala language (සිංහල)." 
+    ? "IMPORTANT: All output text (zodiacSign, prediction, and monthly highlights) MUST be strictly in Sinhala language (සිංහල). Use appropriate astrological terms in Sinhala." 
     : "All output text MUST be in English.";
 
   const prompt = `
-    Based on the following birth details:
+    Analyze these birth details to generate a 12-month Vedic-inspired astrology forecast:
     Name: ${details.name}
     Birth Date: ${details.birthDate}
     Birth Time: ${details.birthTime}
     Birth Location: ${details.birthLocation}, ${details.birthState}, ${details.birthCountry}
-    Additional Context: ${details.additionalContext || "None"}
-    The current date is ${currentMonthName} ${currentYear}.
+    User Context: ${details.additionalContext || "General life guidance"}
+    Current Context: ${currentMonthName} ${currentYear}
     
     ${langInstruction}
-    Provide a detailed 12-month astrological forecast.
+    Provide a core theme for the next 12 months and a breakdown of major highlights for each month.
   `;
 
   const response = await ai.models.generateContent({
@@ -35,8 +38,8 @@ export async function getAstrologyPrediction(details: UserDetails): Promise<Pred
         type: Type.OBJECT,
         properties: {
           zodiacSign: { type: Type.STRING },
-          symbol: { type: Type.STRING, description: 'A single cosmic emoji representing the sign' },
-          prediction: { type: Type.STRING, description: 'A detailed theme for the next 12 months' },
+          symbol: { type: Type.STRING, description: 'A single zodiac emoji corresponding to the sign' },
+          prediction: { type: Type.STRING, description: 'The overarching 12-month theme/summary' },
           monthlyBreakdown: {
             type: Type.ARRAY,
             items: {
@@ -55,42 +58,44 @@ export async function getAstrologyPrediction(details: UserDetails): Promise<Pred
   });
 
   const text = response.text;
-  if (!text) throw new Error('The stars are currently obscured.');
+  if (!text) throw new Error('Celestial alignment failed. Please try again.');
   return JSON.parse(text) as PredictionData;
 }
 
-export interface ChatBridge {
-  sendMessage: (msg: string, history: Message[]) => Promise<string>;
-}
-
-export function createChatBridge(userDetails: UserDetails, prediction: PredictionData, currentLanguage: Language): ChatBridge {
+/**
+ * Sends a message to the Cosmic Oracle chat using Gemini 3 Pro.
+ */
+export async function sendChatMessage(
+  message: string, 
+  history: Message[], 
+  userDetails: UserDetails, 
+  prediction: PredictionData,
+  currentLanguage: Language
+): Promise<string> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const langInstruction = currentLanguage === 'si' 
-    ? "You must respond exclusively in Sinhala (සිංහල). Keep responses mystical yet helpful." 
-    : "You must respond in English. Keep responses mystical yet helpful.";
+    ? "You must respond exclusively in Sinhala (සිංහල). Use 'process' and 'server' as loanwords where needed in context of the app agreement if mentioned, but otherwise keep the tone mystical and traditional." 
+    : "You must respond in English. Keep responses mystical, empathetic, and insightful.";
 
   const systemInstruction = `
-    You are an expert celestial astrologer named the Cosmic Oracle. 
-    User Profile: ${JSON.stringify(userDetails)}.
-    Their 12-Month Prediction: ${JSON.stringify(prediction)}.
+    You are the "Cosmic Oracle," a wise celestial guide. 
+    User Profile: ${userDetails.name}, born ${userDetails.birthDate} at ${userDetails.birthTime}.
+    Prediction Context: ${prediction.prediction}.
+    
     ${langInstruction}
-    Answer the user's questions based on their astrological data. If they ask things outside of astrology, gently guide them back to the stars.
+    Maintain a consistent persona. Answer questions about the user's astrological path based on their profile and 12-month outlook.
   `;
 
   const chat = ai.chats.create({
     model: 'gemini-3-pro-preview',
-    config: {
-      systemInstruction,
-    },
+    config: { systemInstruction },
+    history: history.map(m => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }]
+    }))
   });
 
-  return {
-    sendMessage: async (message: string, history: Message[]) => {
-      // Note: SDK Chat object maintains its own history if we keep using the same instance,
-      // but to ensure consistency with our UI state, we can use simple sendMessage.
-      const response = await chat.sendMessage({ message });
-      return response.text || "";
-    }
-  };
+  const response = await chat.sendMessage({ message });
+  return response.text || (currentLanguage === 'si' ? "තරු නිහඬ වී ඇත." : "The stars are silent.");
 }

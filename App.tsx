@@ -15,7 +15,6 @@ const App: React.FC = () => {
   const [prediction, setPrediction] = useState<PredictionData | null>(null);
   const [error, setError] = useState<string | null>(null);
   
-  // Initialize language from localStorage or default to 'en'
   const [currentLanguage, setCurrentLanguage] = useState<Language>(() => {
     return (localStorage.getItem('cosmic_oracle_lang') as Language) || 'en';
   });
@@ -27,15 +26,16 @@ const App: React.FC = () => {
   const handleFormSubmit = async (details: UserDetails) => {
     setLoading(true);
     setError(null);
-    // Use the language from global state to ensure consistency
     const detailsWithCurrentLang = { ...details, language: currentLanguage };
     try {
       const data = await getAstrologyPrediction(detailsWithCurrentLang);
       setUserDetails(detailsWithCurrentLang);
       setPrediction(data);
     } catch (err) {
-      console.error(err);
-      setError(currentLanguage === 'si' ? "තරු පෙනීම අවහිර වී ඇත. කරුණාකර නැවත උත්සාහ කරන්න." : "The stars are currently obscured. Please try again later.");
+      console.error("Prediction Fetch Error:", err);
+      setError(currentLanguage === 'si' 
+        ? "විශ්වීය දත්ත ලබා ගැනීමට නොහැකි විය. කරුණාකර නැවත උත්සාහ කරන්න." 
+        : "The celestial signals are weak. Please check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -61,7 +61,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center p-4 md:p-8 overflow-x-hidden">
+    <div className="min-h-screen flex flex-col items-center p-4 md:p-8 overflow-x-hidden text-white">
       <Header />
       
       {!hasConsented && (
@@ -83,7 +83,7 @@ const App: React.FC = () => {
               onLanguageChange={toggleLanguage} 
             />
             {error && (
-              <div className="mt-4 p-4 glass rounded-xl text-red-400 text-center border-red-500/30">
+              <div className="mt-6 p-4 glass rounded-2xl text-red-400 text-center border-red-500/30 animate-shake">
                 {error}
               </div>
             )}
@@ -101,20 +101,20 @@ const App: React.FC = () => {
               onLanguageChange={toggleLanguage}
               currentLanguage={currentLanguage}
             />
-            <div className="flex justify-center pb-8">
+            <div className="flex justify-center pb-12">
               <button 
                 onClick={handleReset}
-                className="px-6 py-2 rounded-full glass border border-white/20 text-white/60 hover:text-white hover:border-white/40 transition-all text-sm"
+                className="px-8 py-3 rounded-full glass border border-white/20 text-white/60 hover:text-white hover:border-white/40 hover:bg-white/5 transition-all text-sm font-semibold tracking-wide"
               >
-                {currentLanguage === 'si' ? "නැවත තරු විමසන්න" : "Consult the Stars Again"}
+                {currentLanguage === 'si' ? "නැවත තරු විමසන්න" : "Return to the Stars"}
               </button>
             </div>
           </div>
         )}
       </main>
 
-      <footer className="mt-auto py-6 text-white/30 text-xs text-center w-full">
-        &copy; {new Date().getFullYear()} Cosmic Oracle • Powered by Gemini AI
+      <footer className="mt-auto py-8 text-white/30 text-xs text-center w-full border-t border-white/5">
+        &copy; {new Date().getFullYear()} Cosmic Oracle • Powered by Gemini 3 AI
       </footer>
     </div>
   );

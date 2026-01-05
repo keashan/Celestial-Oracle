@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { UserDetails, PredictionData, Message, Language } from '../types';
-import { createChatBridge } from '../services/geminiService';
+import { sendChatMessage } from '../services/geminiService';
 
 interface ChatInterfaceProps {
   userDetails: UserDetails;
@@ -13,23 +13,21 @@ interface ChatInterfaceProps {
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ userDetails, prediction, currentLanguage, onLanguageChange }) => {
   const [messages, setMessages] = useState<Message[]>(() => [{ 
     role: 'assistant', 
-    content: userDetails.language === 'si' 
-      ? `තරු ඔබ සමඟ කතා කිරීමට සූදානම්, ${userDetails.name}. ඔබේ ජීවන මාවතේ ඔබට වඩාත් ගැඹුරින් දැනගත යුත්තේ කුමක්ද?`
-      : `The stars are open for conversation, ${userDetails.name}. What specific area of your path would you like to explore deeper?` 
+    content: currentLanguage === 'si' 
+      ? `මාර්ගෝපදේශනයක් අවශ්‍යද, ${userDetails.name}? ඔබේ ජන්ම පත්‍රය පිළිබඳ ඕනෑම දෙයක් විමසන්න.`
+      : `Seeking guidance, ${userDetails.name}? Ask me anything about your celestial path.` 
   }]);
   
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // We use a bridge to abstract whether we're calling a proxy or the SDK directly
-  const chatBridge = useMemo(() => {
-    return createChatBridge(userDetails, prediction, currentLanguage);
-  }, [userDetails, prediction, currentLanguage]);
-
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
     }
   }, [messages, isTyping]);
 
@@ -43,14 +41,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userDetails, prediction, 
     setIsTyping(true);
 
     try {
-      // Pass history to the bridge to support stateless proxy calls
-      const botContent = await chatBridge.sendMessage(userMsg, currentHistory);
-      setMessages(prev => [...prev, { role: 'assistant', content: botContent || "..." }]);
+      const botContent = await sendChatMessage(
+        userMsg, 
+        currentHistory, 
+        userDetails, 
+        prediction, 
+        currentLanguage
+      );
+      setMessages(prev => [...prev, { role: 'assistant', content: botContent }]);
     } catch (err) {
-      console.error(err);
+      console.error("Chat Error:", err);
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: currentLanguage === 'si' ? "සම්බන්ධතාවයට බාධාවක් ඇති විය. කරුණාකර නැවත උත්සාහ කරන්න." : "An eclipse has blocked our connection. Please try again." 
+        content: currentLanguage === 'si' 
+          ? "සන්නිවේදන බාධාවක් ඇති විය. කරුණාකර නැවත උත්සාහ කරන්න." 
+          : "An eclipse has blocked our connection. Please try again." 
       }]);
     } finally {
       setIsTyping(false);
@@ -59,11 +64,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userDetails, prediction, 
 
   return (
     <div className="glass rounded-[2rem] border border-white/10 flex flex-col h-[600px] overflow-hidden shadow-2xl">
-      <div className="bg-white/5 px-6 py-4 border-b border-white/10 flex items-center justify-between">
+      <div className="bg-white/5 px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0">
         <div className="flex items-center space-x-3">
-          <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+          <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></div>
           <span className="text-white/60 text-xs font-bold uppercase tracking-widest">
-            {currentLanguage === 'si' ? 'සජීවී විශ්ව උපදේශනය' : 'Live Cosmic Consultation'}
+            {currentLanguage === 'si' ? 'විශ්වීය උපදේශනය' : 'Celestial Bridge'}
           </span>
         </div>
         
@@ -83,12 +88,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userDetails, prediction, 
         </div>
       </div>
 
-      <div ref={scrollRef} className="flex-grow overflow-y-auto p-6 space-y-4 custom-scrollbar">
+      <div ref={scrollRef} className="flex-grow overflow-y-auto p-6 space-y-4">
         {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
             <div className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
               msg.role === 'user' 
-              ? 'bg-purple-600 text-white rounded-tr-none' 
+              ? 'bg-gradient-to-br from-purple-600 to-blue-600 text-white rounded-tr-none shadow-lg' 
               : 'glass text-white/90 rounded-tl-none border border-white/10'
             }`}>
               {msg.content}
@@ -99,28 +104,28 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userDetails, prediction, 
           <div className="flex justify-start">
             <div className="glass px-4 py-3 rounded-2xl rounded-tl-none border border-white/10">
               <div className="flex space-x-1">
-                <div className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce"></div>
-                <div className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce delay-100"></div>
-                <div className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce delay-200"></div>
+                <div className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"></div>
+                <div className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce delay-100"></div>
+                <div className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce delay-200"></div>
               </div>
             </div>
           </div>
         )}
       </div>
 
-      <div className="p-4 bg-white/5 border-t border-white/10">
+      <div className="p-4 bg-white/5 border-t border-white/10 shrink-0">
         <div className="flex space-x-2">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-            placeholder={currentLanguage === 'si' ? "ප්‍රශ්නයක් අසන්න..." : "Ask the oracle..."}
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            placeholder={currentLanguage === 'si' ? "ප්‍රශ්නයක් අසන්න..." : "Ask the stars..."}
             className="flex-grow bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-purple-500/50"
           />
           <button
             onClick={handleSend}
             disabled={!input.trim() || isTyping}
-            className="bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white p-3 rounded-xl transition-colors shadow-lg"
+            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:brightness-110 disabled:opacity-30 text-white p-3 rounded-xl transition-all shadow-lg active:scale-95"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
