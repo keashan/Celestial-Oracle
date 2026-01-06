@@ -3,16 +3,23 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { UserDetails, PredictionData, Language, Message } from "../types.ts";
 
 /**
+ * Gets the API key from environment or bridge.
+ */
+function getApiKey(): string {
+  const key = process.env.API_KEY || (import.meta as any).env?.VITE_API_KEY;
+  if (!key) {
+    throw new Error('API_KEY is not configured in the environment.');
+  }
+  return key;
+}
+
+/**
  * Generates the initial 12-month astrology prediction using Gemini 3 Flash.
  */
 export async function getAstrologyPrediction(details: UserDetails): Promise<PredictionData> {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) {
-    throw new Error('API_KEY is not configured.');
-  }
-
-  // Always create a new instance right before making an API call
+  const apiKey = getApiKey();
   const ai = new GoogleGenAI({ apiKey });
+  
   const currentDate = new Date();
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const currentMonthName = monthNames[currentDate.getMonth()];
@@ -64,7 +71,7 @@ export async function getAstrologyPrediction(details: UserDetails): Promise<Pred
   });
 
   const text = response.text;
-  if (!text) throw new Error('Celestial alignment failed. Please try again.');
+  if (!text) throw new Error('The oracle returned an empty signal.');
   return JSON.parse(text) as PredictionData;
 }
 
@@ -78,11 +85,7 @@ export async function sendChatMessage(
   prediction: PredictionData,
   currentLanguage: Language
 ): Promise<string> {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) {
-    throw new Error('API_KEY is not configured.');
-  }
-
+  const apiKey = getApiKey();
   const ai = new GoogleGenAI({ apiKey });
   
   const langInstruction = currentLanguage === 'si' 

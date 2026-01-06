@@ -14,13 +14,11 @@ const App: React.FC = () => {
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [prediction, setPrediction] = useState<PredictionData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [rawError, setRawError] = useState<string | null>(null);
   const [debugKey, setDebugKey] = useState<string | null>(null);
   
-  // Check if any valid API key source is available (Process or Vite bridge)
   const [needsApiKey, setNeedsApiKey] = useState(() => {
-    const hasProcessKey = !!process.env.API_KEY;
-    const hasViteKey = !!(import.meta as any).env?.VITE_API_KEY;
-    return !hasProcessKey && !hasViteKey;
+    return !process.env.API_KEY && !(import.meta as any).env?.VITE_API_KEY;
   });
   
   const [currentLanguage, setCurrentLanguage] = useState<Language>(() => {
@@ -33,7 +31,6 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const checkKeyStatus = async () => {
-      // Prioritize environment variables (mapped via bridge in index.tsx)
       const hasEnvKey = !!process.env.API_KEY || !!(import.meta as any).env?.VITE_API_KEY;
       
       if (!hasEnvKey) {
@@ -55,17 +52,16 @@ const App: React.FC = () => {
     const aistudio = (window as any).aistudio;
     if (aistudio && typeof aistudio.openSelectKey === 'function') {
       await aistudio.openSelectKey();
-      // Assume success and proceed to the app immediately per guidelines
       setNeedsApiKey(false);
     } else {
-      console.error("AIStudio bridge not found.");
-      setError("Celestial Bridge not found. Please ensure VITE_API_KEY is set in your environment.");
+      setError("Celestial Bridge not found. Ensure VITE_API_KEY is configured.");
     }
   };
 
   const handleFormSubmit = async (details: UserDetails) => {
     setLoading(true);
     setError(null);
+    setRawError(null);
     setDebugKey(null);
     const detailsWithCurrentLang = { ...details, language: currentLanguage };
     
@@ -79,14 +75,17 @@ const App: React.FC = () => {
       const pKey = process.env.API_KEY;
       const vKey = (import.meta as any).env?.VITE_API_KEY;
       setDebugKey(pKey ? `PROCESS_ENV_READY` : vKey ? `VITE_ENV_READY` : "NOT_FOUND");
+      
+      // Store the actual API error message for debugging
+      setRawError(err.message || "Unknown celestial error");
 
       if (err.message?.includes("Requested entity was not found") || (!pKey && !vKey)) {
         setNeedsApiKey(true);
       }
 
       setError(currentLanguage === 'si' 
-        ? "විශ්වීය දත්ත ලබා ගැනීමට නොහැකි විය. කරුණාකර ඔබගේ API_KEY එක පරීක්ෂා කර නැවත උත්සාහ කරන්න." 
-        : "The celestial signals are weak. Please check your API_KEY configuration and try again.");
+        ? "විශ්වීය දත්ත ලබා ගැනීමට නොහැකි විය. කරුණාකර ඔබගේ API_KEY එක සහ බිල්පත් විස්තර පරීක්ෂා කරන්න." 
+        : "The celestial signals are weak. Please check your API key validity and billing status.");
     } finally {
       setLoading(false);
     }
@@ -96,6 +95,7 @@ const App: React.FC = () => {
     setUserDetails(null);
     setPrediction(null);
     setError(null);
+    setRawError(null);
     setDebugKey(null);
   };
 
@@ -114,32 +114,26 @@ const App: React.FC = () => {
 
   if (needsApiKey) {
     const isLocalBuild = !(window as any).aistudio;
-    
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center animate-fade-in">
         <Header />
         <div className="mt-12 p-10 glass rounded-[2.5rem] border border-white/10 max-w-xl w-full space-y-8">
           <h2 className="text-[length:var(--fs-heading-sub)] font-bold text-white uppercase tracking-widest">Establish Connection</h2>
           <p className="text-[length:var(--fs-body)] text-white/50 leading-relaxed">
-            The Cosmic Oracle requires an API key to communicate with the stars. 
-            {isLocalBuild ? " Please ensure VITE_API_KEY is set in your deployment environment." : " Please select a paid API key to begin."}
+            The Cosmic Oracle needs an API key to communicate with the stars. 
+            {isLocalBuild ? " Please ensure VITE_API_KEY is set in your Vercel settings." : " Please select a paid API key to begin."}
           </p>
-          
           <div className="bg-purple-500/5 border border-purple-500/10 p-5 rounded-2xl text-[11px] text-purple-200/50 text-left space-y-2">
-            <p>• Netlify/Vite: Use <code className="text-white">VITE_API_KEY</code> as the variable name.</p>
-            <p>• Visit the <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">billing docs</a> for details.</p>
+            <p>• Key must be from a <strong>paid</strong> Google Cloud project.</p>
+            <p>• Recommended key name: <code className="text-white">VITE_API_KEY</code></p>
           </div>
-
           {!isLocalBuild ? (
-            <button 
-              onClick={handleSelectKey}
-              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 py-5 rounded-xl font-bold uppercase tracking-[0.2em] text-[length:var(--fs-btn-text)] hover:scale-[1.01] active:scale-95 transition-all shadow-xl"
-            >
+            <button onClick={handleSelectKey} className="w-full bg-gradient-to-r from-purple-600 to-blue-600 py-5 rounded-xl font-bold uppercase tracking-[0.2em] text-[length:var(--fs-btn-text)] hover:scale-[1.01] active:scale-95 transition-all shadow-xl">
               Select API Key
             </button>
           ) : (
             <div className="p-4 border border-red-500/20 bg-red-500/5 rounded-xl text-red-400 text-xs font-bold uppercase tracking-widest">
-              Connection Bridge Unavailable
+              Awaiting Environment Configuration
             </div>
           )}
         </div>
@@ -150,77 +144,43 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col items-center p-6 md:p-8 overflow-x-hidden text-white">
       <Header />
-      
-      {!hasConsented && (
-        <ConsentModal 
-          onAccept={handleAcceptConsent} 
-          language={currentLanguage} 
-          onLanguageChange={toggleLanguage}
-        />
-      )}
-
+      {!hasConsented && <ConsentModal onAccept={handleAcceptConsent} language={currentLanguage} onLanguageChange={toggleLanguage} />}
       <main className="w-full max-w-5xl flex-grow mt-8 relative">
-        {loading && (
-          <div className="absolute inset-0 z-20 bg-[#0a0a1a]/80 backdrop-blur-lg rounded-[2.5rem]">
-            <Loader language={currentLanguage} />
-          </div>
-        )}
-
+        {loading && <div className="absolute inset-0 z-20 bg-[#0a0a1a]/80 backdrop-blur-lg rounded-[2.5rem]"><Loader language={currentLanguage} /></div>}
         <div className={prediction ? 'hidden' : 'block animate-fade-in'}>
-          <AstroForm 
-            onSubmit={handleFormSubmit} 
-            currentLanguage={currentLanguage} 
-            onLanguageChange={toggleLanguage}
-            disabled={loading}
-          />
+          <AstroForm onSubmit={handleFormSubmit} currentLanguage={currentLanguage} onLanguageChange={toggleLanguage} disabled={loading} />
           {error && (
             <div className="mt-8 p-8 glass rounded-[2rem] text-red-400 text-center border border-red-500/20 bg-red-500/5 shadow-2xl animate-fade-in">
               <div className="flex items-center justify-center space-x-3 mb-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
                 <span className="font-bold uppercase tracking-[0.3em] text-[var(--fs-form-label)]">Celestial Obstacle</span>
               </div>
               <p className="text-[length:var(--fs-body)] font-medium leading-relaxed mb-4">{error}</p>
               
-              <div className="mt-4 p-3 bg-black/40 rounded-xl border border-white/5 text-[9px] font-mono tracking-wider opacity-60">
-                <p>DEBUG [API_SOURCE]: <span className="text-yellow-400 font-bold">{debugKey}</span></p>
-                <button 
-                  onClick={() => setNeedsApiKey(true)}
-                  className="mt-2 text-purple-400 hover:text-purple-300 underline font-bold uppercase tracking-wider"
-                >
-                  Configure Connection
-                </button>
+              <div className="mt-4 p-4 bg-black/40 rounded-xl border border-white/5 text-[10px] font-mono tracking-wider space-y-2">
+                <p>SOURCE: <span className="text-yellow-400 font-bold">{debugKey}</span></p>
+                <p className="text-red-300 opacity-80 break-words">API ERROR: {rawError}</p>
+                <div className="pt-2 border-t border-white/5">
+                  <button onClick={() => setNeedsApiKey(true)} className="text-purple-400 hover:text-purple-300 underline font-bold uppercase tracking-wider">
+                    Update Connection
+                  </button>
+                </div>
               </div>
             </div>
           )}
         </div>
-
         {prediction && userDetails && (
           <div className="space-y-12 animate-fade-in pb-24">
-            <PredictionDisplay 
-              prediction={prediction} 
-              userName={userDetails.name} 
-              language={currentLanguage}
-            />
-            <ChatInterface 
-              userDetails={userDetails} 
-              prediction={prediction} 
-              onLanguageChange={toggleLanguage}
-              currentLanguage={currentLanguage}
-            />
+            <PredictionDisplay prediction={prediction} userName={userDetails.name} language={currentLanguage} />
+            <ChatInterface userDetails={userDetails} prediction={prediction} onLanguageChange={toggleLanguage} currentLanguage={currentLanguage} />
             <div className="flex justify-center">
-              <button 
-                onClick={handleReset}
-                className="px-10 py-4 rounded-full glass border border-white/20 text-white/70 hover:text-white hover:border-white/50 hover:bg-white/10 transition-all text-[length:var(--fs-btn-text)] font-bold tracking-[0.4em] uppercase shadow-xl active:scale-95"
-              >
+              <button onClick={handleReset} className="px-10 py-4 rounded-full glass border border-white/20 text-white/70 hover:text-white hover:border-white/50 hover:bg-white/10 transition-all text-[length:var(--fs-btn-text)] font-bold tracking-[0.4em] uppercase shadow-xl active:scale-95">
                 {currentLanguage === 'si' ? "නැවත තරු විමසන්න" : "Return to the Stars"}
               </button>
             </div>
           </div>
         )}
       </main>
-
       <footer className="mt-auto py-8 text-white/30 text-xs uppercase tracking-[0.4em] text-center w-full border-t border-white/5">
         &copy; {new Date().getFullYear()} Cosmic Oracle • Handcrafted Wisdom
       </footer>
