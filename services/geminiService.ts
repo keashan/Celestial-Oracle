@@ -6,11 +6,13 @@ import { UserDetails, PredictionData, Language, Message } from "../types.ts";
  * Generates the initial 12-month astrology prediction using Gemini 3 Flash.
  */
 export async function getAstrologyPrediction(details: UserDetails): Promise<PredictionData> {
-  if (!process.env.API_KEY) {
-    throw new Error('API_KEY is missing from process.env. Please configure it in your environment.');
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+    throw new Error('API_KEY is not configured.');
   }
 
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  // Always create a new instance right before making an API call
+  const ai = new GoogleGenAI({ apiKey });
   const currentDate = new Date();
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const currentMonthName = monthNames[currentDate.getMonth()];
@@ -76,7 +78,12 @@ export async function sendChatMessage(
   prediction: PredictionData,
   currentLanguage: Language
 ): Promise<string> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+    throw new Error('API_KEY is not configured.');
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
   
   const langInstruction = currentLanguage === 'si' 
     ? "You must respond exclusively in Sinhala (සිංහල). Use 'process' and 'server' as loanwords where needed in context of the app agreement if mentioned, but otherwise keep the tone mystical and traditional." 

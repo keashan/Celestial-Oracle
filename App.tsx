@@ -9,16 +9,15 @@ import Header from './components/Header.tsx';
 import Loader from './components/Loader.tsx';
 import ConsentModal from './components/ConsentModal.tsx';
 
-// Assume aistudio is globally available and typed as AIStudio in the environment.
-// Redundant declarations are removed to avoid conflict with internal environment definitions.
-
 const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [prediction, setPrediction] = useState<PredictionData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [debugKey, setDebugKey] = useState<string | null>(null);
-  const [needsApiKey, setNeedsApiKey] = useState(false);
+  
+  // Start with needsApiKey true if the environment variable is explicitly missing
+  const [needsApiKey, setNeedsApiKey] = useState(() => !process.env.API_KEY);
   
   const [currentLanguage, setCurrentLanguage] = useState<Language>(() => {
     return (localStorage.getItem('cosmic_oracle_lang') as Language) || 'en';
@@ -29,29 +28,32 @@ const App: React.FC = () => {
   });
 
   useEffect(() => {
-    const checkKey = async () => {
-      // If process.env.API_KEY is explicitly missing, we might need aistudio selection
+    const checkKeyStatus = async () => {
       if (!process.env.API_KEY) {
-        // Accessing aistudio via window casting to 'any' to avoid TypeScript errors with existing global 'AIStudio' type
         const aistudio = (window as any).aistudio;
         if (aistudio && typeof aistudio.hasSelectedApiKey === 'function') {
           const hasKey = await aistudio.hasSelectedApiKey();
-          if (!hasKey) {
-            setNeedsApiKey(true);
-          }
+          setNeedsApiKey(!hasKey);
+        } else {
+          setNeedsApiKey(true);
         }
+      } else {
+        setNeedsApiKey(false);
       }
     };
-    checkKey();
+    checkKeyStatus();
   }, []);
 
   const handleSelectKey = async () => {
     const aistudio = (window as any).aistudio;
     if (aistudio && typeof aistudio.openSelectKey === 'function') {
       await aistudio.openSelectKey();
+      // Per instructions: assume success and proceed to the app immediately
+      setNeedsApiKey(false);
+    } else {
+      console.error("AIStudio bridge not found.");
+      setError("Celestial Bridge not found in this environment.");
     }
-    // Proceed immediately as per instructions to avoid race conditions
-    setNeedsApiKey(false);
   };
 
   const handleFormSubmit = async (details: UserDetails) => {
@@ -70,7 +72,8 @@ const App: React.FC = () => {
       const currentKey = process.env.API_KEY;
       setDebugKey(currentKey === undefined ? "UNDEFINED" : currentKey === "" ? "EMPTY STRING" : `EXISTS (${currentKey.substring(0, 4)}...)`);
 
-      if (err.message?.includes("Requested entity was not found")) {
+      // If the key is revoked or missing mid-session, prompt for selection again
+      if (err.message?.includes("Requested entity was not found") || !currentKey) {
         setNeedsApiKey(true);
       }
 
@@ -106,21 +109,20 @@ const App: React.FC = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center animate-fade-in">
         <Header />
-        <div className="mt-12 p-12 glass rounded-[3rem] border border-white/10 max-w-2xl w-full space-y-8">
-          <h2 className="text-[length:var(--fs-heading-sub)] font-bold text-white uppercase tracking-widest">Celestial Connection Required</h2>
-          <p className="text-[length:var(--fs-body)] text-white/60 leading-relaxed">
-            To unlock the wisdom of the stars using Gemini 3 Pro, you must establish a secure connection with your own API key.
+        <div className="mt-12 p-10 glass rounded-[2.5rem] border border-white/10 max-w-xl w-full space-y-8">
+          <h2 className="text-[length:var(--fs-heading-sub)] font-bold text-white uppercase tracking-widest">Connect to Gemini</h2>
+          <p className="text-[length:var(--fs-body)] text-white/50 leading-relaxed">
+            The Cosmic Oracle requires a connection to Google's celestial processors. Please select a paid API key to begin your journey.
           </p>
-          <div className="bg-purple-500/5 border border-purple-500/20 p-6 rounded-2xl text-xs text-purple-200/70">
-            Note: A key from a paid GCP project is required. Visit the 
-            <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="mx-1 underline hover:text-white">billing documentation</a> 
-            for more information.
+          <div className="bg-purple-500/5 border border-purple-500/10 p-5 rounded-2xl text-[11px] text-purple-200/50 text-left space-y-2">
+            <p>• A key from a paid GCP project is required.</p>
+            <p>• Visit the <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">billing docs</a> for details.</p>
           </div>
           <button 
             onClick={handleSelectKey}
-            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 py-6 rounded-2xl font-bold uppercase tracking-[0.3em] text-[length:var(--fs-btn-text)] hover:scale-[1.02] active:scale-95 transition-all shadow-2xl shadow-purple-500/20"
+            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 py-5 rounded-xl font-bold uppercase tracking-[0.2em] text-[length:var(--fs-btn-text)] hover:scale-[1.01] active:scale-95 transition-all shadow-xl"
           >
-            Connect to Gemini
+            Select API Key
           </button>
         </div>
       </div>
@@ -156,21 +158,20 @@ const App: React.FC = () => {
           {error && (
             <div className="mt-8 p-8 glass rounded-[2rem] text-red-400 text-center border border-red-500/20 bg-red-500/5 shadow-2xl animate-fade-in">
               <div className="flex items-center justify-center space-x-3 mb-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
-                <span className="font-bold uppercase tracking-[0.4em] text-[var(--fs-form-label)]">Celestial Obstacle</span>
+                <span className="font-bold uppercase tracking-[0.3em] text-[var(--fs-form-label)]">Celestial Obstacle</span>
               </div>
-              <p className="text-[length:var(--fs-heading-sub)] font-medium leading-relaxed mb-4">{error}</p>
+              <p className="text-[length:var(--fs-body)] font-medium leading-relaxed mb-4">{error}</p>
               
-              <div className="mt-4 p-3 bg-black/40 rounded-xl border border-white/5 text-[10px] font-mono tracking-wider opacity-60">
+              <div className="mt-4 p-3 bg-black/40 rounded-xl border border-white/5 text-[9px] font-mono tracking-wider opacity-60">
                 <p>DEBUG [process.env.API_KEY]: <span className="text-yellow-400 font-bold">{debugKey}</span></p>
-                <p className="mt-1 text-[9px] text-white/30 uppercase">If 'UNDEFINED', use the connection button above to select a key.</p>
                 <button 
                   onClick={() => setNeedsApiKey(true)}
-                  className="mt-3 text-purple-400 hover:text-purple-300 underline font-bold"
+                  className="mt-2 text-purple-400 hover:text-purple-300 underline font-bold uppercase tracking-wider"
                 >
-                  Switch Key / Connect Now
+                  Reset Connection / Change Key
                 </button>
               </div>
             </div>
