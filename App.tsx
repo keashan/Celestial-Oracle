@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserDetails, PredictionData, Language } from './types.ts';
 import { getAstrologyPrediction } from './services/geminiService.ts';
 import AstroForm from './components/AstroForm.tsx';
@@ -9,12 +9,16 @@ import Header from './components/Header.tsx';
 import Loader from './components/Loader.tsx';
 import ConsentModal from './components/ConsentModal.tsx';
 
+// Assume aistudio is globally available and typed as AIStudio in the environment.
+// Redundant declarations are removed to avoid conflict with internal environment definitions.
+
 const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [prediction, setPrediction] = useState<PredictionData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [debugKey, setDebugKey] = useState<string | null>(null);
+  const [needsApiKey, setNeedsApiKey] = useState(false);
   
   const [currentLanguage, setCurrentLanguage] = useState<Language>(() => {
     return (localStorage.getItem('cosmic_oracle_lang') as Language) || 'en';
@@ -23,6 +27,32 @@ const App: React.FC = () => {
   const [hasConsented, setHasConsented] = useState<boolean>(() => {
     return localStorage.getItem('cosmic_oracle_consent') === 'true';
   });
+
+  useEffect(() => {
+    const checkKey = async () => {
+      // If process.env.API_KEY is explicitly missing, we might need aistudio selection
+      if (!process.env.API_KEY) {
+        // Accessing aistudio via window casting to 'any' to avoid TypeScript errors with existing global 'AIStudio' type
+        const aistudio = (window as any).aistudio;
+        if (aistudio && typeof aistudio.hasSelectedApiKey === 'function') {
+          const hasKey = await aistudio.hasSelectedApiKey();
+          if (!hasKey) {
+            setNeedsApiKey(true);
+          }
+        }
+      }
+    };
+    checkKey();
+  }, []);
+
+  const handleSelectKey = async () => {
+    const aistudio = (window as any).aistudio;
+    if (aistudio && typeof aistudio.openSelectKey === 'function') {
+      await aistudio.openSelectKey();
+    }
+    // Proceed immediately as per instructions to avoid race conditions
+    setNeedsApiKey(false);
+  };
 
   const handleFormSubmit = async (details: UserDetails) => {
     setLoading(true);
@@ -37,9 +67,12 @@ const App: React.FC = () => {
     } catch (err: any) {
       console.error("Prediction Fetch Error:", err);
       
-      // Capturing what the app sees as the API Key for debugging
       const currentKey = process.env.API_KEY;
       setDebugKey(currentKey === undefined ? "UNDEFINED" : currentKey === "" ? "EMPTY STRING" : `EXISTS (${currentKey.substring(0, 4)}...)`);
+
+      if (err.message?.includes("Requested entity was not found")) {
+        setNeedsApiKey(true);
+      }
 
       setError(currentLanguage === 'si' 
         ? "විශ්වීය දත්ත ලබා ගැනීමට නොහැකි විය. කරුණාකර ඔබගේ API_KEY එක පරීක්ෂා කර නැවත උත්සාහ කරන්න." 
@@ -68,6 +101,31 @@ const App: React.FC = () => {
     setHasConsented(true);
     localStorage.setItem('cosmic_oracle_consent', 'true');
   };
+
+  if (needsApiKey) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center animate-fade-in">
+        <Header />
+        <div className="mt-12 p-12 glass rounded-[3rem] border border-white/10 max-w-2xl w-full space-y-8">
+          <h2 className="text-[length:var(--fs-heading-sub)] font-bold text-white uppercase tracking-widest">Celestial Connection Required</h2>
+          <p className="text-[length:var(--fs-body)] text-white/60 leading-relaxed">
+            To unlock the wisdom of the stars using Gemini 3 Pro, you must establish a secure connection with your own API key.
+          </p>
+          <div className="bg-purple-500/5 border border-purple-500/20 p-6 rounded-2xl text-xs text-purple-200/70">
+            Note: A key from a paid GCP project is required. Visit the 
+            <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="mx-1 underline hover:text-white">billing documentation</a> 
+            for more information.
+          </div>
+          <button 
+            onClick={handleSelectKey}
+            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 py-6 rounded-2xl font-bold uppercase tracking-[0.3em] text-[length:var(--fs-btn-text)] hover:scale-[1.02] active:scale-95 transition-all shadow-2xl shadow-purple-500/20"
+          >
+            Connect to Gemini
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center p-6 md:p-8 overflow-x-hidden text-white">
@@ -107,7 +165,13 @@ const App: React.FC = () => {
               
               <div className="mt-4 p-3 bg-black/40 rounded-xl border border-white/5 text-[10px] font-mono tracking-wider opacity-60">
                 <p>DEBUG [process.env.API_KEY]: <span className="text-yellow-400 font-bold">{debugKey}</span></p>
-                <p className="mt-1 text-[9px] text-white/30 uppercase">If 'UNDEFINED', the key is not being injected correctly.</p>
+                <p className="mt-1 text-[9px] text-white/30 uppercase">If 'UNDEFINED', use the connection button above to select a key.</p>
+                <button 
+                  onClick={() => setNeedsApiKey(true)}
+                  className="mt-3 text-purple-400 hover:text-purple-300 underline font-bold"
+                >
+                  Switch Key / Connect Now
+                </button>
               </div>
             </div>
           )}
