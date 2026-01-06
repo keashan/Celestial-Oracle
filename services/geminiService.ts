@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { UserDetails, PredictionData, Language, Message } from "../types.ts";
+import { UserDetails, PredictionData, Language, Message, SignCategoryPrediction } from "../types.ts";
 
 /**
  * Gets the API key from environment or bridge.
@@ -11,6 +11,65 @@ function getApiKey(): string {
     throw new Error('API_KEY is not configured in the environment.');
   }
   return key;
+}
+
+/**
+ * Generates a category-based prediction for a specific zodiac sign.
+ */
+export async function getSignCategoryPrediction(signName: string, symbol: string, language: Language): Promise<SignCategoryPrediction> {
+  const apiKey = getApiKey();
+  const ai = new GoogleGenAI({ apiKey });
+
+  const langInstruction = language === 'si' 
+    ? "IMPORTANT: All values in the JSON response MUST be strictly in Sinhala language (සිංහල). Keep the tone mystical and professional." 
+    : "All output text MUST be in English.";
+
+  const prompt = `
+    Provide a detailed astrological outlook for the zodiac sign ${signName} for the current period.
+    ${langInstruction}
+    Return the response in JSON format with insights for these categories:
+    1. General Path (A summary of the current cosmic vibration)
+    2. Love & Romance (Dating, relationships, and emotional connections)
+    3. Wealth & Money (Financial outlook, investments, and spending)
+    4. Career & Job (Work environment, professional growth, and ambitions)
+    5. Education (Learning, exams, and intellectual pursuits)
+    6. Health (Physical well-being and energy levels)
+  `;
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          categories: {
+            type: Type.OBJECT,
+            properties: {
+              general: { type: Type.STRING },
+              love: { type: Type.STRING },
+              money: { type: Type.STRING },
+              career: { type: Type.STRING },
+              education: { type: Type.STRING },
+              health: { type: Type.STRING }
+            },
+            required: ["general", "love", "money", "career", "education", "health"]
+          }
+        },
+        required: ["categories"]
+      }
+    }
+  });
+
+  const text = response.text;
+  if (!text) throw new Error('The oracle returned an empty signal.');
+  const parsed = JSON.parse(text);
+  return {
+    sign: signName,
+    symbol: symbol,
+    categories: parsed.categories
+  };
 }
 
 /**
@@ -76,7 +135,7 @@ export async function getAstrologyPrediction(details: UserDetails): Promise<Pred
 }
 
 /**
- * Sends a message to the Cosmic Oracle chat using Gemini 3 Pro.
+ * Sends a message to the Cosmic Oracle chat using Gemini 3 Flash.
  */
 export async function sendChatMessage(
   message: string, 
@@ -89,7 +148,7 @@ export async function sendChatMessage(
   const ai = new GoogleGenAI({ apiKey });
   
   const langInstruction = currentLanguage === 'si' 
-    ? "You must respond exclusively in Sinhala (සිංහල). Use 'process' and 'server' as loanwords where needed in context of the app agreement if mentioned, but otherwise keep the tone mystical and traditional." 
+    ? "You must respond exclusively in Sinhala (සිංහල). Keep the tone mystical and traditional." 
     : "You must respond in English. Keep responses mystical, empathetic, and insightful.";
 
   const systemInstruction = `
@@ -102,7 +161,7 @@ export async function sendChatMessage(
   `;
 
   const chat = ai.chats.create({
-    model: 'gemini-3-pro-preview',
+    model: 'gemini-3-flash-preview',
     config: { systemInstruction },
     history: history.map(m => ({
       role: m.role === 'assistant' ? 'model' : 'user',
