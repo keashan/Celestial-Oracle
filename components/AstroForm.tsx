@@ -6,6 +6,7 @@ interface AstroFormProps {
   onSubmit: (details: UserDetails) => void;
   currentLanguage: Language;
   onLanguageChange: (lang: Language) => void;
+  disabled?: boolean;
 }
 
 const translations = {
@@ -43,7 +44,7 @@ const translations = {
   }
 };
 
-const AstroForm: React.FC<AstroFormProps> = ({ onSubmit, currentLanguage, onLanguageChange }) => {
+const AstroForm: React.FC<AstroFormProps> = ({ onSubmit, currentLanguage, onLanguageChange, disabled }) => {
   const [formData, setFormData] = useState<UserDetails>({
     name: '',
     birthDate: '',
@@ -68,6 +69,7 @@ const AstroForm: React.FC<AstroFormProps> = ({ onSubmit, currentLanguage, onLang
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (disabled) return;
     const { name, birthDate, birthTime, birthLocation, birthState, birthCountry } = formData;
     if (name && birthDate && birthTime && birthLocation && birthState && birthCountry) {
       onSubmit(formData);
@@ -75,7 +77,7 @@ const AstroForm: React.FC<AstroFormProps> = ({ onSubmit, currentLanguage, onLang
   };
 
   return (
-    <div className="glass p-8 md:p-12 rounded-[2.5rem] shadow-2xl w-full max-w-2xl mx-auto border border-white/5 relative overflow-hidden group">
+    <div className={`glass p-8 md:p-12 rounded-[2.5rem] shadow-2xl w-full max-w-2xl mx-auto border border-white/5 relative overflow-hidden transition-all duration-500 ${disabled ? 'opacity-30 pointer-events-none scale-[0.98] grayscale' : 'opacity-100'}`}>
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent"></div>
       
       <h2 className="text-3xl font-bold text-white mb-8 text-center tracking-tight">{t.title}</h2>
@@ -84,6 +86,7 @@ const AstroForm: React.FC<AstroFormProps> = ({ onSubmit, currentLanguage, onLang
         <div className="bg-white/5 p-1 rounded-2xl border border-white/5 flex shadow-inner">
           <button 
             type="button"
+            disabled={disabled}
             onClick={() => onLanguageChange('en')}
             className={`px-8 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${currentLanguage === 'en' ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg' : 'text-white/30 hover:text-white/60'}`}
           >
@@ -91,6 +94,7 @@ const AstroForm: React.FC<AstroFormProps> = ({ onSubmit, currentLanguage, onLang
           </button>
           <button 
             type="button"
+            disabled={disabled}
             onClick={() => onLanguageChange('si')}
             className={`px-8 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${currentLanguage === 'si' ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg' : 'text-white/30 hover:text-white/60'}`}
           >
@@ -104,6 +108,7 @@ const AstroForm: React.FC<AstroFormProps> = ({ onSubmit, currentLanguage, onLang
           <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">{t.nameLabel}</label>
           <input
             required
+            disabled={disabled}
             name="name"
             value={formData.name}
             onChange={handleChange}
@@ -116,6 +121,7 @@ const AstroForm: React.FC<AstroFormProps> = ({ onSubmit, currentLanguage, onLang
           <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">{t.dateLabel}</label>
           <input
             required
+            disabled={disabled}
             type="date"
             name="birthDate"
             value={formData.birthDate}
@@ -128,6 +134,7 @@ const AstroForm: React.FC<AstroFormProps> = ({ onSubmit, currentLanguage, onLang
           <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">{t.timeLabel}</label>
           <input
             required
+            disabled={disabled}
             type="time"
             name="birthTime"
             value={formData.birthTime}
@@ -140,6 +147,7 @@ const AstroForm: React.FC<AstroFormProps> = ({ onSubmit, currentLanguage, onLang
           <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">{t.cityLabel}</label>
           <input
             required
+            disabled={disabled}
             name="birthLocation"
             value={formData.birthLocation}
             onChange={handleChange}
@@ -152,6 +160,7 @@ const AstroForm: React.FC<AstroFormProps> = ({ onSubmit, currentLanguage, onLang
           <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">{t.stateLabel}</label>
           <input
             required
+            disabled={disabled}
             name="birthState"
             value={formData.birthState}
             onChange={handleChange}
@@ -164,6 +173,7 @@ const AstroForm: React.FC<AstroFormProps> = ({ onSubmit, currentLanguage, onLang
           <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">{t.countryLabel}</label>
           <input
             required
+            disabled={disabled}
             name="birthCountry"
             value={formData.birthCountry}
             onChange={handleChange}
@@ -176,6 +186,7 @@ const AstroForm: React.FC<AstroFormProps> = ({ onSubmit, currentLanguage, onLang
           <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">{t.contextLabel}</label>
           <textarea
             name="additionalContext"
+            disabled={disabled}
             value={formData.additionalContext}
             onChange={handleChange}
             placeholder={t.contextPlaceholder}
@@ -187,7 +198,8 @@ const AstroForm: React.FC<AstroFormProps> = ({ onSubmit, currentLanguage, onLang
         <div className="col-span-1 md:col-span-2 pt-6">
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold py-5 rounded-2xl shadow-[0_10px_30px_rgba(124,58,237,0.3)] transition-all transform hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center space-x-3 tracking-widest uppercase text-xs"
+            disabled={disabled}
+            className={`w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold py-5 rounded-2xl shadow-[0_10px_30px_rgba(124,58,237,0.3)] transition-all transform flex items-center justify-center space-x-3 tracking-widest uppercase text-xs ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.01] active:scale-[0.99]'}`}
           >
             <span>{t.submitBtn}</span>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
