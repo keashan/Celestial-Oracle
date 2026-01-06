@@ -16,8 +16,12 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [debugKey, setDebugKey] = useState<string | null>(null);
   
-  // Start with needsApiKey true if the environment variable is explicitly missing
-  const [needsApiKey, setNeedsApiKey] = useState(() => !process.env.API_KEY);
+  // Check if any valid API key source is available (Process or Vite bridge)
+  const [needsApiKey, setNeedsApiKey] = useState(() => {
+    const hasProcessKey = !!process.env.API_KEY;
+    const hasViteKey = !!(import.meta as any).env?.VITE_API_KEY;
+    return !hasProcessKey && !hasViteKey;
+  });
   
   const [currentLanguage, setCurrentLanguage] = useState<Language>(() => {
     return (localStorage.getItem('cosmic_oracle_lang') as Language) || 'en';
@@ -29,7 +33,10 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const checkKeyStatus = async () => {
-      if (!process.env.API_KEY) {
+      // Prioritize environment variables (mapped via bridge in index.tsx)
+      const hasEnvKey = !!process.env.API_KEY || !!(import.meta as any).env?.VITE_API_KEY;
+      
+      if (!hasEnvKey) {
         const aistudio = (window as any).aistudio;
         if (aistudio && typeof aistudio.hasSelectedApiKey === 'function') {
           const hasKey = await aistudio.hasSelectedApiKey();
@@ -48,11 +55,11 @@ const App: React.FC = () => {
     const aistudio = (window as any).aistudio;
     if (aistudio && typeof aistudio.openSelectKey === 'function') {
       await aistudio.openSelectKey();
-      // Per instructions: assume success and proceed to the app immediately
+      // Assume success and proceed to the app immediately per guidelines
       setNeedsApiKey(false);
     } else {
       console.error("AIStudio bridge not found.");
-      setError("Celestial Bridge not found in this environment.");
+      setError("Celestial Bridge not found. Please ensure VITE_API_KEY is set in your environment.");
     }
   };
 
@@ -69,11 +76,11 @@ const App: React.FC = () => {
     } catch (err: any) {
       console.error("Prediction Fetch Error:", err);
       
-      const currentKey = process.env.API_KEY;
-      setDebugKey(currentKey === undefined ? "UNDEFINED" : currentKey === "" ? "EMPTY STRING" : `EXISTS (${currentKey.substring(0, 4)}...)`);
+      const pKey = process.env.API_KEY;
+      const vKey = (import.meta as any).env?.VITE_API_KEY;
+      setDebugKey(pKey ? `PROCESS_ENV_READY` : vKey ? `VITE_ENV_READY` : "NOT_FOUND");
 
-      // If the key is revoked or missing mid-session, prompt for selection again
-      if (err.message?.includes("Requested entity was not found") || !currentKey) {
+      if (err.message?.includes("Requested entity was not found") || (!pKey && !vKey)) {
         setNeedsApiKey(true);
       }
 
@@ -106,24 +113,35 @@ const App: React.FC = () => {
   };
 
   if (needsApiKey) {
+    const isLocalBuild = !(window as any).aistudio;
+    
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center animate-fade-in">
         <Header />
         <div className="mt-12 p-10 glass rounded-[2.5rem] border border-white/10 max-w-xl w-full space-y-8">
-          <h2 className="text-[length:var(--fs-heading-sub)] font-bold text-white uppercase tracking-widest">Connect to Gemini</h2>
+          <h2 className="text-[length:var(--fs-heading-sub)] font-bold text-white uppercase tracking-widest">Establish Connection</h2>
           <p className="text-[length:var(--fs-body)] text-white/50 leading-relaxed">
-            The Cosmic Oracle requires a connection to Google's celestial processors. Please select a paid API key to begin your journey.
+            The Cosmic Oracle requires an API key to communicate with the stars. 
+            {isLocalBuild ? " Please ensure VITE_API_KEY is set in your deployment environment." : " Please select a paid API key to begin."}
           </p>
+          
           <div className="bg-purple-500/5 border border-purple-500/10 p-5 rounded-2xl text-[11px] text-purple-200/50 text-left space-y-2">
-            <p>• A key from a paid GCP project is required.</p>
+            <p>• Netlify/Vite: Use <code className="text-white">VITE_API_KEY</code> as the variable name.</p>
             <p>• Visit the <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">billing docs</a> for details.</p>
           </div>
-          <button 
-            onClick={handleSelectKey}
-            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 py-5 rounded-xl font-bold uppercase tracking-[0.2em] text-[length:var(--fs-btn-text)] hover:scale-[1.01] active:scale-95 transition-all shadow-xl"
-          >
-            Select API Key
-          </button>
+
+          {!isLocalBuild ? (
+            <button 
+              onClick={handleSelectKey}
+              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 py-5 rounded-xl font-bold uppercase tracking-[0.2em] text-[length:var(--fs-btn-text)] hover:scale-[1.01] active:scale-95 transition-all shadow-xl"
+            >
+              Select API Key
+            </button>
+          ) : (
+            <div className="p-4 border border-red-500/20 bg-red-500/5 rounded-xl text-red-400 text-xs font-bold uppercase tracking-widest">
+              Connection Bridge Unavailable
+            </div>
+          )}
         </div>
       </div>
     );
@@ -166,12 +184,12 @@ const App: React.FC = () => {
               <p className="text-[length:var(--fs-body)] font-medium leading-relaxed mb-4">{error}</p>
               
               <div className="mt-4 p-3 bg-black/40 rounded-xl border border-white/5 text-[9px] font-mono tracking-wider opacity-60">
-                <p>DEBUG [process.env.API_KEY]: <span className="text-yellow-400 font-bold">{debugKey}</span></p>
+                <p>DEBUG [API_SOURCE]: <span className="text-yellow-400 font-bold">{debugKey}</span></p>
                 <button 
                   onClick={() => setNeedsApiKey(true)}
                   className="mt-2 text-purple-400 hover:text-purple-300 underline font-bold uppercase tracking-wider"
                 >
-                  Reset Connection / Change Key
+                  Configure Connection
                 </button>
               </div>
             </div>
