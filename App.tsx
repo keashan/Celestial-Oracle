@@ -1,9 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { UserDetails, PredictionData, Language, AppView, SignCategoryPrediction, ZODIAC_SIGNS } from './types.ts';
-import { getAstrologyPrediction, getAllSignPredictions } from './services/geminiService.ts';
+import { UserDetails, PredictionData, Language, AppView, SignCategoryPrediction, MatchDetails, MatchPrediction } from './types.ts';
+import { getAstrologyPrediction, getAllSignPredictions, getHoroscopeMatch } from './services/geminiService.ts';
 import AstroForm from './components/AstroForm.tsx';
+import MatchForm from './components/MatchForm.tsx';
 import PredictionDisplay from './components/PredictionDisplay.tsx';
+import MatchDisplay from './components/MatchDisplay.tsx';
 import ChatInterface from './components/ChatInterface.tsx';
 import Header from './components/Header.tsx';
 import Loader from './components/Loader.tsx';
@@ -17,15 +19,13 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState<AppView>('HOME');
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
+  const [matchDetails, setMatchDetails] = useState<MatchDetails | null>(null);
   const [prediction, setPrediction] = useState<PredictionData | null>(null);
+  const [matchPrediction, setMatchPrediction] = useState<MatchPrediction | null>(null);
   const [signDetail, setSignDetail] = useState<SignCategoryPrediction | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [rawError, setRawError] = useState<string | null>(null);
   
-  // Cache for all sign predictions to avoid repeated API calls
   const [signCache, setSignCache] = useState<Partial<Record<Language, Record<string, SignCategoryPrediction>>>>({});
-
-  // Freemium Ad State
   const [adOverlayActive, setAdOverlayActive] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => Promise<void>) | null>(null);
   
@@ -41,7 +41,6 @@ const App: React.FC = () => {
     return localStorage.getItem('cosmic_oracle_consent') === 'true';
   });
 
-  // Effect to reset scroll position on view change
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [view]);
@@ -69,61 +68,60 @@ const App: React.FC = () => {
     if (aistudio && typeof aistudio.openSelectKey === 'function') {
       await aistudio.openSelectKey();
       setNeedsApiKey(false);
-    } else {
-      setError("Celestial Bridge not found.");
     }
   };
 
   const executeFormSubmit = async (details: UserDetails) => {
     setLoading(true);
     setError(null);
-    setRawError(null);
     try {
       const data = await getAstrologyPrediction(details);
       setUserDetails(details);
       setPrediction(data);
       setView('RESULT');
     } catch (err: any) {
-      setRawError(err.message || "Unknown celestial error");
       setError(currentLanguage === 'si' ? "දත්ත ලබා ගැනීමට නොහැකි විය." : "Failed to fetch celestial data.");
     } finally {
       setLoading(false);
     }
   };
 
+  const executeMatchSubmit = async (details: MatchDetails) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getHoroscopeMatch(details, currentLanguage);
+      setMatchDetails(details);
+      setMatchPrediction(data);
+      setView('MATCH_RESULT');
+    } catch (err: any) {
+      setError(currentLanguage === 'si' ? "ගැළපීම් සිදු කිරීමට නොහැකි විය." : "Failed to perform matching ritual.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const executeSignSelect = async (signId: string) => {
-    // 1. Check if we already have the predictions for ALL signs in this language
     const currentLangCache = signCache[currentLanguage];
-    
     if (currentLangCache && currentLangCache[signId]) {
-      // Instant reveal from cache
       setSignDetail(currentLangCache[signId]);
       setView('SIGN_DETAIL');
       return;
     }
 
-    // 2. Otherwise, fetch all 12 signs in one network request
     setLoading(true);
     setError(null);
     try {
       const allData = await getAllSignPredictions(currentLanguage);
-      
-      // Update cache
-      setSignCache(prev => ({
-        ...prev,
-        [currentLanguage]: allData
-      }));
-
-      // Pick the one the user clicked on
+      setSignCache(prev => ({ ...prev, [currentLanguage]: allData }));
       const selectedSignData = allData[signId];
       if (selectedSignData) {
         setSignDetail(selectedSignData);
         setView('SIGN_DETAIL');
       } else {
-        throw new Error("Sign data missing from alignment.");
+        throw new Error("Sign data missing.");
       }
     } catch (err: any) {
-      console.error(err);
       setError(currentLanguage === 'si' ? "දත්ත ලබා ගැනීමට නොහැකි විය." : "Failed to fetch celestial data.");
     } finally {
       setLoading(false);
@@ -135,8 +133,12 @@ const App: React.FC = () => {
     setAdOverlayActive(true);
   };
 
+  const handleMatchSubmit = (details: MatchDetails) => {
+    setPendingAction(() => () => executeMatchSubmit(details));
+    setAdOverlayActive(true);
+  };
+
   const handleSignSelect = (signId: string) => {
-    // ALWAYS trigger the ad view irrespective of whether the data is cached or not.
     setPendingAction(() => () => executeSignSelect(signId));
     setAdOverlayActive(true);
   };
@@ -154,6 +156,8 @@ const App: React.FC = () => {
     setUserDetails(null);
     setPrediction(null);
     setSignDetail(null);
+    setMatchPrediction(null);
+    setMatchDetails(null);
     setError(null);
   };
 
@@ -167,39 +171,52 @@ const App: React.FC = () => {
     localStorage.setItem('cosmic_oracle_consent', 'true');
   };
 
-  const isAtHome = view === 'HOME';
-  const headerBtnText = isAtHome 
-    ? (currentLanguage === 'si' ? "කේන්ද්‍ර පලාපල" : "Personalized Chart")
-    : (currentLanguage === 'si' ? "ලග්න පලාපල" : "Zodiac Horoscopes");
+  const isZodiacMode = view === 'HOME' || view === 'SIGN_DETAIL';
+  const isPersonalizedMode = view === 'FORM' || view === 'RESULT';
+  const isMatchMode = view === 'MATCH_FORM' || view === 'MATCH_RESULT';
 
-  if (needsApiKey) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center animate-fade-in">
-        <Header />
-        <div className="mt-12 p-10 glass rounded-[2.5rem] border border-white/10 max-w-xl w-full space-y-8">
-          <h2 className="text-2xl font-bold text-white uppercase tracking-widest">Establish Connection</h2>
-          <p className="text-white/50 leading-relaxed">The Cosmic Oracle needs an API key to communicate with the stars.</p>
-          <button onClick={handleSelectKey} className="w-full bg-gradient-to-r from-purple-600 to-blue-600 py-5 rounded-xl font-bold uppercase tracking-[0.2em] hover:scale-[1.01] active:scale-95 transition-all shadow-xl">
-            Select API Key
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const navButtons = [
+    { 
+      id: 'zodiac', 
+      label: currentLanguage === 'si' ? 'ලග්න පලාපල' : 'Zodiac Signs', 
+      action: handleReset,
+      gradient: 'from-purple-600 to-indigo-600',
+      active: isZodiacMode
+    },
+    { 
+      id: 'personalized', 
+      label: currentLanguage === 'si' ? 'කේන්ද්‍ර පලාපල' : 'Birth Chart', 
+      action: () => setView('FORM'),
+      gradient: 'from-blue-600 to-cyan-600',
+      active: isPersonalizedMode
+    },
+    { 
+      id: 'match', 
+      label: currentLanguage === 'si' ? 'පොරොන්දම් බැලීම' : 'Horoscope Match', 
+      action: () => setView('MATCH_FORM'),
+      gradient: 'from-pink-600 to-rose-600',
+      active: isMatchMode
+    }
+  ];
 
+  const visibleButtons = navButtons.filter(btn => !btn.active);
+  
   return (
     <div className="min-h-screen flex flex-col items-center p-6 md:p-8 overflow-x-hidden text-white">
-      <div className="w-full max-w-5xl flex justify-between items-center mb-8">
+      <div className="w-full max-w-5xl flex flex-col md:flex-row justify-between items-center mb-12 gap-8">
         <div className="cursor-pointer" onClick={handleReset}>
-          <Header />
+          <Header language={currentLanguage} />
         </div>
         <div className="flex space-x-4">
-          <button 
-            onClick={() => isAtHome ? setView('FORM') : handleReset()}
-            className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white text-[11px] font-bold uppercase tracking-[0.2em] transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-[0_10px_20px_rgba(124,58,237,0.2)]"
-          >
-            {headerBtnText}
-          </button>
+          {visibleButtons.map((btn) => (
+            <button 
+              key={btn.id}
+              onClick={btn.action}
+              className={`px-6 py-3 rounded-2xl bg-gradient-to-r ${btn.gradient} hover:brightness-110 text-white text-[10px] md:text-[11px] font-bold uppercase tracking-[0.2em] transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg`}
+            >
+              {btn.label}
+            </button>
+          ))}
         </div>
       </div>
       
@@ -234,7 +251,12 @@ const App: React.FC = () => {
 
         {view === 'SIGN_DETAIL' && signDetail && (
           <div className="animate-fade-in space-y-12">
-            <SignPrediction prediction={signDetail} language={currentLanguage} onBack={handleReset} />
+            <SignPrediction 
+              prediction={signDetail} 
+              language={currentLanguage} 
+              onBack={handleReset} 
+              onGoToForm={() => setView('FORM')}
+            />
           </div>
         )}
 
@@ -247,21 +269,37 @@ const App: React.FC = () => {
           />
         )}
 
+        {view === 'MATCH_FORM' && (
+          <MatchForm 
+            onSubmit={handleMatchSubmit} 
+            currentLanguage={currentLanguage} 
+            onLanguageChange={toggleLanguage}
+            disabled={loading}
+          />
+        )}
+
+        {view === 'MATCH_RESULT' && matchPrediction && matchDetails && (
+          <div className="space-y-12 animate-fade-in pb-24">
+            <MatchDisplay prediction={matchPrediction} details={matchDetails} language={currentLanguage} />
+            <div className="flex justify-center">
+              <button onClick={handleReset} className="px-12 py-5 rounded-2xl bg-gradient-to-r from-pink-600 to-rose-600 hover:brightness-110 text-white font-bold uppercase tracking-[0.3em] transition-all hover:scale-[1.01] active:scale-[0.98] shadow-lg shadow-pink-500/20">
+                {currentLanguage === 'si' ? "නැවත මුල් පිටුවට" : "Return to Home"}
+              </button>
+            </div>
+            <Disclaimer language={currentLanguage} />
+          </div>
+        )}
+
         {view === 'RESULT' && prediction && userDetails && (
           <div className="space-y-12 animate-fade-in pb-24">
             <PredictionDisplay prediction={prediction} userName={userDetails.name} language={currentLanguage} />
             <ChatInterface userDetails={userDetails} prediction={prediction} onLanguageChange={toggleLanguage} currentLanguage={currentLanguage} />
-            
-            <Disclaimer language={currentLanguage} />
-
             <div className="flex justify-center">
-              <button 
-                onClick={handleReset} 
-                className="px-12 py-5 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold transition-all transform hover:scale-[1.01] active:scale-[0.98] shadow-[0_15px_40px_rgba(124,58,237,0.3)] tracking-[0.3em] uppercase text-[length:var(--fs-btn-text)]"
-              >
+              <button onClick={handleReset} className="px-12 py-5 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:brightness-110 text-white font-bold uppercase tracking-[0.3em] transition-all hover:scale-[1.01] active:scale-[0.98] shadow-lg shadow-blue-500/20">
                 {currentLanguage === 'si' ? "නැවත මුල් පිටුවට" : "Return to Home"}
               </button>
             </div>
+            <Disclaimer language={currentLanguage} />
           </div>
         )}
       </main>

@@ -1,7 +1,7 @@
 
 export type Language = 'en' | 'si';
 
-export type AppView = 'HOME' | 'SIGN_DETAIL' | 'FORM' | 'RESULT';
+export type AppView = 'HOME' | 'SIGN_DETAIL' | 'FORM' | 'RESULT' | 'MATCH_FORM' | 'MATCH_RESULT';
 
 export interface UserDetails {
   name: string;
@@ -14,11 +14,28 @@ export interface UserDetails {
   additionalContext?: string;
 }
 
+export interface MatchDetails {
+  person1: UserDetails;
+  person2: UserDetails;
+}
+
 export interface PredictionData {
   zodiacSign: string;
   symbol: string;
   prediction: string;
   monthlyBreakdown: { month: string; highlight: string }[];
+}
+
+export interface MatchPrediction {
+  score: number;
+  summary: string;
+  categories: {
+    emotional: string;
+    physical: string;
+    intellectual: string;
+    spiritual: string;
+  };
+  conclusion: string;
 }
 
 export interface SignCategoryPrediction {

@@ -7,24 +7,39 @@ interface SignPredictionProps {
   prediction: SignCategoryPrediction;
   language: Language;
   onBack: () => void;
+  onGoToForm: () => void;
 }
 
-const SignPrediction: React.FC<SignPredictionProps> = ({ prediction, language, onBack }) => {
+const SignPrediction: React.FC<SignPredictionProps> = ({ prediction, language, onBack, onGoToForm }) => {
   const categoryMeta = [
-    { key: 'general', icon: '✨', title: language === 'en' ? 'General Path' : 'විශ්වීය මාවත', color: 'from-blue-500/20 to-purple-500/20' },
-    { key: 'love', icon: '❤️', title: language === 'en' ? 'Love & Romance' : 'ආදරය සහ ප්‍රේමය', color: 'from-pink-500/20 to-rose-500/20' },
-    { key: 'money', icon: '💰', title: language === 'en' ? 'Wealth & Money' : 'ධනය සහ මුදල්', color: 'from-emerald-500/20 to-teal-500/20' },
-    { key: 'career', icon: '💼', title: language === 'en' ? 'Career & Job' : 'වෘත්තිය සහ රැකියාව', color: 'from-indigo-500/20 to-blue-500/20' },
-    { key: 'education', icon: '🎓', title: language === 'en' ? 'Education' : 'අධ්‍යාපනය', color: 'from-amber-500/20 to-orange-500/20' },
-    { key: 'health', icon: '🧘', title: language === 'en' ? 'Health' : 'සෞඛ්‍යය', color: 'from-cyan-500/20 to-sky-500/20' },
+    { key: 'general', icon: '✨', title: language === 'en' ? 'General Path' : 'විශ්වීය මාවත', color: 'from-blue-600/30 to-purple-600/30', isHero: true },
+    { key: 'love', icon: '❤️', title: language === 'en' ? 'Love & Romance' : 'ආදරය සහ ප්‍රේමය', color: 'from-pink-500/20 to-rose-500/20', isHero: false },
+    { key: 'money', icon: '💰', title: language === 'en' ? 'Wealth & Money' : 'ධනය සහ මුදල්', color: 'from-emerald-500/20 to-teal-500/20', isHero: false },
+    { key: 'career', icon: '💼', title: language === 'en' ? 'Career & Job' : 'වෘත්තිය සහ රැකියාව', color: 'from-indigo-500/20 to-blue-500/20', isHero: false },
+    { key: 'education', icon: '🎓', title: language === 'en' ? 'Education' : 'අධ්‍යාපනය', color: 'from-amber-500/20 to-orange-500/20', isHero: false },
+    { key: 'health', icon: '🧘', title: language === 'en' ? 'Health' : 'සෞඛ්‍යය', color: 'from-cyan-500/20 to-sky-500/20', isHero: false },
   ];
+
+  const t = language === 'si' ? {
+    predictionHeader: "ඉදිරි මාස 12 සඳහා අනාවැකි",
+    ctaTitle: "වැඩිදුර විස්තර සඳහා?",
+    ctaDesc: "ඔබේ උපන් වේලාව සහ ස්ථානය අනුව සැකසූ පෞද්ගලික කේන්ද්‍ර පලාපල මෙතැනින් ලබාගන්න.",
+    ctaBtn: "කේන්ද්‍ර පලාපල ලබාගන්න",
+    backBtn: "ලග්න ලැයිස්තුවට"
+  } : {
+    predictionHeader: "Prediction for Next 12 Months",
+    ctaTitle: "Seeking more depth?",
+    ctaDesc: "Get a highly personalized 12-month analysis based on your exact birth time and location.",
+    ctaBtn: "Get My Birth Chart",
+    backBtn: "Return to Signs"
+  };
 
   return (
     <div className="space-y-12 pb-20">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <button 
           onClick={onBack}
-          className="flex items-center space-x-2 text-white/50 hover:text-white transition-colors group"
+          className="flex items-center space-x-2 text-white/50 hover:text-white transition-colors group self-start"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transform group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -32,10 +47,13 @@ const SignPrediction: React.FC<SignPredictionProps> = ({ prediction, language, o
           <span className="text-xs uppercase tracking-[0.3em] font-bold">{language === 'en' ? 'Back' : 'ආපසු'}</span>
         </button>
 
-        <div className="text-right">
-          <div className="text-4xl md:text-6xl font-bold flex items-center justify-end space-x-4">
+        <div className="text-left md:text-right space-y-2">
+          <div className="text-white/40 uppercase tracking-[0.4em] text-[10px] md:text-xs font-bold">
+            {t.predictionHeader}
+          </div>
+          <div className="text-5xl md:text-7xl font-bold flex items-center md:justify-end space-x-4">
             <span>{prediction.sign}</span>
-            <span className="opacity-50">{prediction.symbol}</span>
+            <span className="opacity-50 filter drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">{prediction.symbol}</span>
           </div>
         </div>
       </div>
@@ -44,16 +62,16 @@ const SignPrediction: React.FC<SignPredictionProps> = ({ prediction, language, o
         {categoryMeta.map((cat) => (
           <div 
             key={cat.key} 
-            className={`glass p-10 rounded-[2.5rem] border border-white/10 hover:border-white/20 transition-all relative overflow-hidden shadow-2xl group`}
+            className={`glass rounded-[2.5rem] border border-white/10 hover:border-white/20 transition-all relative overflow-hidden shadow-2xl group flex flex-col ${cat.isHero ? 'md:col-span-2 p-12' : 'p-10 min-h-[220px]'}`}
           >
-            <div className={`absolute inset-0 bg-gradient-to-br ${cat.color} opacity-20 group-hover:opacity-30 transition-opacity`}></div>
+            <div className={`absolute inset-0 bg-gradient-to-br ${cat.color} ${cat.isHero ? 'opacity-30' : 'opacity-20'} group-hover:opacity-40 transition-opacity`}></div>
             
-            <div className="relative z-10 space-y-6">
+            <div className="relative z-10 space-y-6 flex-grow">
               <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold tracking-wide text-white/90">{cat.title}</h3>
-                <span className="text-3xl filter drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">{cat.icon}</span>
+                <h3 className={`${cat.isHero ? 'text-2xl md:text-3xl' : 'text-xl'} font-bold tracking-wide text-white/90`}>{cat.title}</h3>
+                <span className={`${cat.isHero ? 'text-5xl' : 'text-3xl'} filter drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]`}>{cat.icon}</span>
               </div>
-              <p className="text-[length:var(--fs-body)] leading-relaxed text-white/80 font-light">
+              <p className={`${cat.isHero ? 'text-lg md:text-xl' : 'text-[length:var(--fs-body)]'} leading-relaxed text-white/80 font-light whitespace-pre-line`}>
                 {prediction.categories[cat.key as keyof typeof prediction.categories]}
               </p>
             </div>
@@ -61,16 +79,34 @@ const SignPrediction: React.FC<SignPredictionProps> = ({ prediction, language, o
         ))}
       </div>
 
-      <Disclaimer language={language} />
+      <div className="glass p-8 md:p-12 rounded-[3rem] border border-blue-500/20 bg-blue-500/5 shadow-2xl relative overflow-hidden group">
+        <div className="absolute top-0 right-0 p-8 opacity-[0.05] pointer-events-none transform group-hover:scale-110 transition-transform duration-700">
+           <svg className="w-32 h-32 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12z" clipRule="evenodd"/></svg>
+        </div>
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="text-center md:text-left space-y-3">
+            <h3 className="text-2xl font-bold text-blue-300 uppercase tracking-widest">{t.ctaTitle}</h3>
+            <p className="text-white/70 font-light max-w-xl">{t.ctaDesc}</p>
+          </div>
+          <button 
+            onClick={onGoToForm}
+            className="whitespace-nowrap px-8 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:brightness-110 text-white font-bold uppercase tracking-widest text-xs transition-all transform hover:scale-[1.05] active:scale-95 shadow-lg"
+          >
+            {t.ctaBtn}
+          </button>
+        </div>
+      </div>
 
       <div className="flex justify-center pt-8">
         <button 
           onClick={onBack} 
-          className="px-12 py-5 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold transition-all transform hover:scale-[1.01] active:scale-[0.98] shadow-[0_15px_40px_rgba(124,58,237,0.3)] tracking-[0.3em] uppercase text-[length:var(--fs-btn-text)]"
+          className="px-12 py-5 rounded-2xl bg-gradient-to-r from-purple-600/80 to-blue-600/80 hover:from-purple-600 hover:to-blue-600 text-white border border-white/10 font-bold transition-all transform hover:scale-[1.01] active:scale-[0.98] tracking-[0.3em] uppercase text-[length:var(--fs-btn-text)] shadow-lg shadow-purple-500/20"
         >
-          {language === 'si' ? "ලග්න ලැයිස්තුවට" : "Return to Signs"}
+          {t.backBtn}
         </button>
       </div>
+
+      <Disclaimer language={language} />
     </div>
   );
 };
