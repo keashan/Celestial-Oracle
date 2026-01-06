@@ -63,38 +63,38 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userDetails, prediction, 
   };
 
   return (
-    <div className="glass rounded-[2rem] border border-white/10 flex flex-col h-[600px] overflow-hidden shadow-2xl">
-      <div className="bg-white/5 px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0">
-        <div className="flex items-center space-x-3">
-          <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></div>
-          <span className="text-white/60 text-xs font-bold uppercase tracking-widest">
+    <div className="glass rounded-[3rem] border border-white/10 flex flex-col h-[800px] overflow-hidden shadow-2xl">
+      <div className="bg-white/5 px-10 py-6 border-b border-white/10 flex items-center justify-between shrink-0">
+        <div className="flex items-center space-x-5">
+          <div className="w-4 h-4 rounded-full bg-purple-400 animate-pulse shadow-[0_0_12px_rgba(168,85,247,0.6)]"></div>
+          <span className="text-white/70 text-base font-bold uppercase tracking-[0.3em]">
             {currentLanguage === 'si' ? 'විශ්වීය උපදේශනය' : 'Celestial Bridge'}
           </span>
         </div>
         
-        <div className="flex bg-white/5 p-1 rounded-lg border border-white/5">
+        <div className="flex bg-white/5 p-1.5 rounded-xl border border-white/5">
           <button 
             onClick={() => onLanguageChange('en')}
-            className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${currentLanguage === 'en' ? 'bg-purple-600 text-white' : 'text-white/40'}`}
+            className={`px-6 py-2.5 text-sm font-bold rounded-lg transition-all ${currentLanguage === 'en' ? 'bg-purple-600 text-white shadow-lg' : 'text-white/40'}`}
           >
             EN
           </button>
           <button 
             onClick={() => onLanguageChange('si')}
-            className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${currentLanguage === 'si' ? 'bg-purple-600 text-white' : 'text-white/40'}`}
+            className={`px-6 py-2.5 text-sm font-bold rounded-lg transition-all ${currentLanguage === 'si' ? 'bg-purple-600 text-white shadow-lg' : 'text-white/40'}`}
           >
             SI
           </button>
         </div>
       </div>
 
-      <div ref={scrollRef} className="flex-grow overflow-y-auto p-6 space-y-4">
+      <div ref={scrollRef} className="flex-grow overflow-y-auto p-10 space-y-8">
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
-            <div className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
+            <div className={`max-w-[85%] px-8 py-5 rounded-[2rem] text-lg md:text-xl leading-relaxed shadow-xl ${
               msg.role === 'user' 
-              ? 'bg-gradient-to-br from-purple-600 to-blue-600 text-white rounded-tr-none shadow-lg' 
-              : 'glass text-white/90 rounded-tl-none border border-white/10'
+              ? 'bg-gradient-to-br from-purple-600 to-blue-600 text-white rounded-tr-none' 
+              : 'glass text-white/95 rounded-tl-none border border-white/10'
             }`}>
               {msg.content}
             </div>
@@ -102,32 +102,32 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userDetails, prediction, 
         ))}
         {isTyping && (
           <div className="flex justify-start">
-            <div className="glass px-4 py-3 rounded-2xl rounded-tl-none border border-white/10">
-              <div className="flex space-x-1">
-                <div className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"></div>
-                <div className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce delay-100"></div>
-                <div className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce delay-200"></div>
+            <div className="glass px-8 py-5 rounded-[2rem] rounded-tl-none border border-white/10">
+              <div className="flex space-x-2">
+                <div className="w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce"></div>
+                <div className="w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce delay-100"></div>
+                <div className="w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce delay-200"></div>
               </div>
             </div>
           </div>
         )}
       </div>
 
-      <div className="p-4 bg-white/5 border-t border-white/10 shrink-0">
-        <div className="flex space-x-2">
+      <div className="p-8 bg-white/5 border-t border-white/10 shrink-0">
+        <div className="flex space-x-4">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder={currentLanguage === 'si' ? "ප්‍රශ්නයක් අසන්න..." : "Ask the stars..."}
-            className="flex-grow bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-purple-500/50"
+            className="flex-grow bg-white/5 border border-white/10 rounded-2xl px-8 py-6 text-xl text-white placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-purple-500/50"
           />
           <button
             onClick={handleSend}
             disabled={!input.trim() || isTyping}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:brightness-110 disabled:opacity-30 text-white p-3 rounded-xl transition-all shadow-lg active:scale-95"
+            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:brightness-110 disabled:opacity-30 text-white p-6 rounded-2xl transition-all shadow-lg active:scale-95"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
             </svg>
           </button>
