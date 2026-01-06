@@ -29,16 +29,17 @@ const App: React.FC = () => {
     const detailsWithCurrentLang = { ...details, language: currentLanguage };
     
     try {
-      // We rely on the SDK to use process.env.API_KEY. 
-      // If it fails, the catch block will provide a helpful message.
+      // The API key is assumed to be handled by the environment/SDK.
+      // We remove the manual check to allow the platform to inject it correctly.
       const data = await getAstrologyPrediction(detailsWithCurrentLang);
       setUserDetails(detailsWithCurrentLang);
       setPrediction(data);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Prediction Fetch Error:", err);
+      // Detailed error message to help debug potential environment issues
       setError(currentLanguage === 'si' 
-        ? "විශ්වීය දත්ත ලබා ගැනීමට නොහැකි විය. කරුණාකර ඔබගේ Netlify API_KEY එක නිවැරදි දැයි පරීක්ෂා කර නැවත උත්සාහ කරන්න." 
-        : "The celestial signals are weak. Please ensure your API_KEY is correctly set in Netlify and try again.");
+        ? "විශ්වීය දත්ත ලබා ගැනීමට නොහැකි විය. කරුණාකර ඔබගේ API_KEY එක සහ අන්තර්ජාල සබඳතාවය පරීක්ෂා කරන්න." 
+        : "The celestial signals are weak. Please ensure your API_KEY is valid and your connection is stable.");
     } finally {
       setLoading(false);
     }
@@ -77,11 +78,12 @@ const App: React.FC = () => {
 
       <main className="w-full max-w-5xl flex-grow mt-12 relative">
         {loading && (
-          <div className="absolute inset-0 z-20 bg-[#0a0a1a]/70 backdrop-blur-md rounded-[3rem]">
+          <div className="absolute inset-0 z-20 bg-[#0a0a1a]/80 backdrop-blur-lg rounded-[3.5rem]">
             <Loader language={currentLanguage} />
           </div>
         )}
 
+        {/* Form stays mounted to prevent losing input data on error */}
         <div className={prediction ? 'hidden' : 'block animate-fade-in'}>
           <AstroForm 
             onSubmit={handleFormSubmit} 
@@ -90,23 +92,23 @@ const App: React.FC = () => {
             disabled={loading}
           />
           {error && (
-            <div className="mt-10 p-10 glass rounded-[2rem] text-red-400 text-center border border-red-500/30 bg-red-500/5 shadow-[0_0_40px_rgba(239,68,68,0.15)] animate-pulse">
-              <div className="flex items-center justify-center space-x-3 mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
+            <div className="mt-12 p-10 glass rounded-[2.5rem] text-red-400 text-center border border-red-500/30 bg-red-500/5 shadow-[0_0_50px_rgba(239,68,68,0.2)] animate-fade-in">
+              <div className="flex items-center justify-center space-x-4 mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
-                <span className="font-bold uppercase tracking-[0.4em] text-sm">Celestial Obstacle</span>
+                <span className="font-bold uppercase tracking-[0.5em] text-lg">Celestial Obstacle</span>
               </div>
-              <p className="text-xl md:text-2xl font-medium leading-relaxed">{error}</p>
+              <p className="text-2xl md:text-3xl font-medium leading-relaxed">{error}</p>
             </div>
           )}
         </div>
 
-        {prediction && (userDetails && (
-          <div className="space-y-12 animate-fade-in pb-24">
+        {prediction && userDetails && (
+          <div className="space-y-16 animate-fade-in pb-32">
             <PredictionDisplay 
               prediction={prediction} 
-              userName={userDetails.name || 'Traveler'} 
+              userName={userDetails.name} 
               language={currentLanguage}
             />
             <ChatInterface 
@@ -118,17 +120,17 @@ const App: React.FC = () => {
             <div className="flex justify-center">
               <button 
                 onClick={handleReset}
-                className="px-14 py-6 rounded-full glass border border-white/20 text-white/70 hover:text-white hover:border-white/50 hover:bg-white/10 transition-all text-base font-bold tracking-[0.3em] uppercase shadow-xl"
+                className="px-16 py-8 rounded-full glass border border-white/20 text-white/80 hover:text-white hover:border-white/50 hover:bg-white/10 transition-all text-xl font-bold tracking-[0.4em] uppercase shadow-2xl active:scale-95"
               >
                 {currentLanguage === 'si' ? "නැවත තරු විමසන්න" : "Return to the Stars"}
               </button>
             </div>
           </div>
-        ))}
+        )}
       </main>
 
-      <footer className="mt-auto py-10 text-white/40 text-xs uppercase tracking-[0.4em] text-center w-full border-t border-white/5">
-        &copy; {new Date().getFullYear()} Cosmic Oracle • Powered by Gemini 3 AI
+      <footer className="mt-auto py-12 text-white/30 text-sm uppercase tracking-[0.5em] text-center w-full border-t border-white/5">
+        &copy; {new Date().getFullYear()} Cosmic Oracle • Handcrafted for the Awakened
       </footer>
     </div>
   );

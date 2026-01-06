@@ -63,35 +63,35 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userDetails, prediction, 
   };
 
   return (
-    <div className="glass rounded-[3rem] border border-white/10 flex flex-col h-[800px] overflow-hidden shadow-2xl">
-      <div className="bg-white/5 px-10 py-6 border-b border-white/10 flex items-center justify-between shrink-0">
-        <div className="flex items-center space-x-5">
-          <div className="w-4 h-4 rounded-full bg-purple-400 animate-pulse shadow-[0_0_12px_rgba(168,85,247,0.6)]"></div>
-          <span className="text-white/70 text-base font-bold uppercase tracking-[0.3em]">
+    <div className="glass rounded-[3.5rem] border border-white/10 flex flex-col h-[900px] overflow-hidden shadow-2xl">
+      <div className="bg-white/5 px-12 py-8 border-b border-white/10 flex items-center justify-between shrink-0">
+        <div className="flex items-center space-x-6">
+          <div className="w-5 h-5 rounded-full bg-purple-400 animate-pulse shadow-[0_0_15px_rgba(168,85,247,0.7)]"></div>
+          <span className="text-white/80 text-xl font-bold uppercase tracking-[0.4em]">
             {currentLanguage === 'si' ? 'විශ්වීය උපදේශනය' : 'Celestial Bridge'}
           </span>
         </div>
         
-        <div className="flex bg-white/5 p-1.5 rounded-xl border border-white/5">
+        <div className="flex bg-white/5 p-2 rounded-2xl border border-white/5">
           <button 
             onClick={() => onLanguageChange('en')}
-            className={`px-6 py-2.5 text-sm font-bold rounded-lg transition-all ${currentLanguage === 'en' ? 'bg-purple-600 text-white shadow-lg' : 'text-white/40'}`}
+            className={`px-8 py-3 text-lg font-bold rounded-lg transition-all ${currentLanguage === 'en' ? 'bg-purple-600 text-white shadow-lg' : 'text-white/40'}`}
           >
             EN
           </button>
           <button 
             onClick={() => onLanguageChange('si')}
-            className={`px-6 py-2.5 text-sm font-bold rounded-lg transition-all ${currentLanguage === 'si' ? 'bg-purple-600 text-white shadow-lg' : 'text-white/40'}`}
+            className={`px-8 py-3 text-lg font-bold rounded-lg transition-all ${currentLanguage === 'si' ? 'bg-purple-600 text-white shadow-lg' : 'text-white/40'}`}
           >
             SI
           </button>
         </div>
       </div>
 
-      <div ref={scrollRef} className="flex-grow overflow-y-auto p-10 space-y-8">
+      <div ref={scrollRef} className="flex-grow overflow-y-auto p-12 space-y-10">
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
-            <div className={`max-w-[85%] px-8 py-5 rounded-[2rem] text-lg md:text-xl leading-relaxed shadow-xl ${
+            <div className={`max-w-[80%] px-10 py-7 rounded-[2.5rem] text-2xl md:text-3xl leading-relaxed shadow-xl ${
               msg.role === 'user' 
               ? 'bg-gradient-to-br from-purple-600 to-blue-600 text-white rounded-tr-none' 
               : 'glass text-white/95 rounded-tl-none border border-white/10'
@@ -102,32 +102,32 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userDetails, prediction, 
         ))}
         {isTyping && (
           <div className="flex justify-start">
-            <div className="glass px-8 py-5 rounded-[2rem] rounded-tl-none border border-white/10">
-              <div className="flex space-x-2">
-                <div className="w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce"></div>
-                <div className="w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce delay-100"></div>
-                <div className="w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce delay-200"></div>
+            <div className="glass px-10 py-7 rounded-[2.5rem] rounded-tl-none border border-white/10">
+              <div className="flex space-x-3">
+                <div className="w-3.5 h-3.5 bg-purple-400 rounded-full animate-bounce"></div>
+                <div className="w-3.5 h-3.5 bg-purple-400 rounded-full animate-bounce delay-100"></div>
+                <div className="w-3.5 h-3.5 bg-purple-400 rounded-full animate-bounce delay-200"></div>
               </div>
             </div>
           </div>
         )}
       </div>
 
-      <div className="p-8 bg-white/5 border-t border-white/10 shrink-0">
-        <div className="flex space-x-4">
+      <div className="p-10 bg-white/5 border-t border-white/10 shrink-0">
+        <div className="flex space-x-6">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder={currentLanguage === 'si' ? "ප්‍රශ්නයක් අසන්න..." : "Ask the stars..."}
-            className="flex-grow bg-white/5 border border-white/10 rounded-2xl px-8 py-6 text-xl text-white placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-purple-500/50"
+            className="flex-grow bg-white/5 border border-white/10 rounded-2xl px-10 py-8 text-2xl text-white placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-purple-500/50"
           />
           <button
             onClick={handleSend}
             disabled={!input.trim() || isTyping}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:brightness-110 disabled:opacity-30 text-white p-6 rounded-2xl transition-all shadow-lg active:scale-95"
+            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:brightness-110 disabled:opacity-30 text-white p-8 rounded-2xl transition-all shadow-lg active:scale-90"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
             </svg>
           </button>
