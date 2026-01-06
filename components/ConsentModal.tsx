@@ -31,60 +31,50 @@ const ConsentModal: React.FC<ConsentModalProps> = ({ onAccept, language, onLangu
   const t = translations[language];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-8 bg-[#0a0a1a]/98 backdrop-blur-2xl animate-fade-in overflow-y-auto">
-      <div className="glass max-w-3xl w-full p-12 md:p-16 rounded-[4rem] border border-white/10 shadow-[0_0_80px_rgba(139,92,246,0.3)] space-y-12 my-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#0a0a1a]/95 backdrop-blur-xl animate-fade-in overflow-y-auto">
+      <div className="glass max-w-2xl w-full p-8 md:p-10 rounded-[2.5rem] border border-white/10 shadow-2xl space-y-8 my-auto">
         
         <div className="flex justify-center">
-          <div className="bg-white/5 p-2 rounded-2xl border border-white/5 flex shadow-inner">
+          <div className="bg-white/5 p-1.5 rounded-xl border border-white/5 flex shadow-inner">
             <button 
               type="button"
               onClick={() => onLanguageChange('en')}
-              className={`px-12 py-4 rounded-xl text-xl font-bold transition-all duration-300 ${language === 'en' ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg' : 'text-white/30 hover:text-white/60'}`}
+              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${language === 'en' ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg' : 'text-white/30 hover:text-white/60'}`}
             >
               English
             </button>
             <button 
               type="button"
               onClick={() => onLanguageChange('si')}
-              className={`px-12 py-4 rounded-xl text-xl font-bold transition-all duration-300 ${language === 'si' ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg' : 'text-white/30 hover:text-white/60'}`}
+              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${language === 'si' ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg' : 'text-white/30 hover:text-white/60'}`}
             >
               සිංහල
             </button>
           </div>
         </div>
 
-        <div className="text-center space-y-6">
-          <h2 className="text-4xl md:text-5xl font-bold text-white tracking-widest uppercase">{t.title}</h2>
-          <p className="text-white/60 text-2xl italic max-w-xl mx-auto leading-relaxed">{t.intro}</p>
+        <div className="text-center space-y-3">
+          <h2 className="text-[length:var(--fs-heading-main)] font-bold text-white tracking-widest uppercase">{t.title}</h2>
+          <p className="text-white/50 text-[length:var(--fs-body)] italic max-w-lg mx-auto leading-relaxed">{t.intro}</p>
         </div>
 
-        <div className="space-y-10 bg-white/5 p-12 rounded-[3rem] border border-white/5">
-          <div className="flex items-start space-x-8">
-            <div className="mt-4 shrink-0">
-              <div className="w-4 h-4 bg-purple-500 rounded-full shadow-[0_0_15px_rgba(168,85,247,0.8)]"></div>
+        <div className="space-y-6 bg-white/5 p-8 rounded-2xl border border-white/5">
+          {[t.item1, t.item2, t.item3].map((item, i) => (
+            <div key={i} className="flex items-start space-x-4">
+              <div className="mt-2 shrink-0">
+                <div className="w-2.5 h-2.5 bg-purple-500 rounded-full shadow-[0_0_10px_rgba(168,85,247,0.6)]"></div>
+              </div>
+              <p className="text-[length:var(--fs-modal-item)] text-white/90 leading-relaxed">{item}</p>
             </div>
-            <p className="text-2xl md:text-3xl text-white/95 leading-relaxed font-medium">{t.item1}</p>
-          </div>
-          <div className="flex items-start space-x-8">
-            <div className="mt-4 shrink-0">
-              <div className="w-4 h-4 bg-purple-500 rounded-full shadow-[0_0_15px_rgba(168,85,247,0.8)]"></div>
-            </div>
-            <p className="text-2xl md:text-3xl text-white/95 leading-relaxed font-medium">{t.item2}</p>
-          </div>
-          <div className="flex items-start space-x-8">
-            <div className="mt-4 shrink-0">
-              <div className="w-4 h-4 bg-purple-500 rounded-full shadow-[0_0_15px_rgba(168,85,247,0.8)]"></div>
-            </div>
-            <p className="text-2xl md:text-3xl text-white/95 leading-relaxed font-medium">{t.item3}</p>
-          </div>
+          ))}
         </div>
 
         <button
           onClick={onAccept}
-          className="group relative w-full overflow-hidden rounded-[2.5rem] bg-gradient-to-r from-purple-600 to-blue-600 p-[1px] transition-all hover:scale-[1.01] active:scale-[0.98]"
+          className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 p-[1px] transition-all hover:scale-[1.01] active:scale-[0.98]"
         >
-          <div className="relative rounded-[2.5rem] bg-[#1a1a2e]/60 py-10 transition-all group-hover:bg-transparent">
-            <span className="text-white font-bold tracking-[0.4em] uppercase text-2xl md:text-3xl">{t.btn}</span>
+          <div className="relative rounded-2xl bg-[#1a1a2e]/60 py-4 transition-all group-hover:bg-transparent">
+            <span className="text-white font-bold tracking-[0.3em] uppercase text-[length:var(--fs-btn-text)]">{t.btn}</span>
           </div>
         </button>
       </div>

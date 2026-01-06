@@ -70,7 +70,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center p-6 md:p-12 overflow-x-hidden text-white">
+    <div className="min-h-screen flex flex-col items-center p-6 md:p-8 overflow-x-hidden text-white">
       <Header />
       
       {!hasConsented && (
@@ -81,9 +81,9 @@ const App: React.FC = () => {
         />
       )}
 
-      <main className="w-full max-w-5xl flex-grow mt-12 relative">
+      <main className="w-full max-w-5xl flex-grow mt-8 relative">
         {loading && (
-          <div className="absolute inset-0 z-20 bg-[#0a0a1a]/80 backdrop-blur-lg rounded-[3.5rem]">
+          <div className="absolute inset-0 z-20 bg-[#0a0a1a]/80 backdrop-blur-lg rounded-[2.5rem]">
             <Loader language={currentLanguage} />
           </div>
         )}
@@ -96,26 +96,25 @@ const App: React.FC = () => {
             disabled={loading}
           />
           {error && (
-            <div className="mt-12 p-10 glass rounded-[2.5rem] text-red-400 text-center border border-red-500/30 bg-red-500/5 shadow-[0_0_50px_rgba(239,68,68,0.2)] animate-fade-in">
-              <div className="flex items-center justify-center space-x-4 mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" viewBox="0 0 20 20" fill="currentColor">
+            <div className="mt-8 p-8 glass rounded-[2rem] text-red-400 text-center border border-red-500/20 bg-red-500/5 shadow-2xl animate-fade-in">
+              <div className="flex items-center justify-center space-x-3 mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
-                <span className="font-bold uppercase tracking-[0.5em] text-lg">Celestial Obstacle</span>
+                <span className="font-bold uppercase tracking-[0.4em] text-[var(--fs-form-label)]">Celestial Obstacle</span>
               </div>
-              <p className="text-2xl md:text-3xl font-medium leading-relaxed mb-4">{error}</p>
+              <p className="text-[length:var(--fs-heading-sub)] font-medium leading-relaxed mb-4">{error}</p>
               
-              {/* DEBUG INFO */}
-              <div className="mt-6 p-4 bg-black/40 rounded-xl border border-white/10 text-xs font-mono tracking-wider opacity-70">
+              <div className="mt-4 p-3 bg-black/40 rounded-xl border border-white/5 text-[10px] font-mono tracking-wider opacity-60">
                 <p>DEBUG [process.env.API_KEY]: <span className="text-yellow-400 font-bold">{debugKey}</span></p>
-                <p className="mt-2 text-[10px] text-white/30 uppercase">If 'UNDEFINED', your build tool or Netlify is not injecting the variable correctly.</p>
+                <p className="mt-1 text-[9px] text-white/30 uppercase">If 'UNDEFINED', the key is not being injected correctly.</p>
               </div>
             </div>
           )}
         </div>
 
         {prediction && userDetails && (
-          <div className="space-y-16 animate-fade-in pb-32">
+          <div className="space-y-12 animate-fade-in pb-24">
             <PredictionDisplay 
               prediction={prediction} 
               userName={userDetails.name} 
@@ -130,7 +129,7 @@ const App: React.FC = () => {
             <div className="flex justify-center">
               <button 
                 onClick={handleReset}
-                className="px-16 py-8 rounded-full glass border border-white/20 text-white/80 hover:text-white hover:border-white/50 hover:bg-white/10 transition-all text-xl font-bold tracking-[0.4em] uppercase shadow-2xl active:scale-95"
+                className="px-10 py-4 rounded-full glass border border-white/20 text-white/70 hover:text-white hover:border-white/50 hover:bg-white/10 transition-all text-[length:var(--fs-btn-text)] font-bold tracking-[0.4em] uppercase shadow-xl active:scale-95"
               >
                 {currentLanguage === 'si' ? "නැවත තරු විමසන්න" : "Return to the Stars"}
               </button>
@@ -139,8 +138,8 @@ const App: React.FC = () => {
         )}
       </main>
 
-      <footer className="mt-auto py-12 text-white/30 text-sm uppercase tracking-[0.5em] text-center w-full border-t border-white/5">
-        &copy; {new Date().getFullYear()} Cosmic Oracle • Handcrafted for the Awakened
+      <footer className="mt-auto py-8 text-white/30 text-xs uppercase tracking-[0.4em] text-center w-full border-t border-white/5">
+        &copy; {new Date().getFullYear()} Cosmic Oracle • Handcrafted Wisdom
       </footer>
     </div>
   );
