@@ -6,6 +6,10 @@ import { UserDetails, PredictionData, Language, Message } from "../types.ts";
  * Generates the initial 12-month astrology prediction using Gemini 3 Flash.
  */
 export async function getAstrologyPrediction(details: UserDetails): Promise<PredictionData> {
+  if (!process.env.API_KEY) {
+    throw new Error('API_KEY is missing from process.env. Please configure it in your environment.');
+  }
+
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const currentDate = new Date();
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];

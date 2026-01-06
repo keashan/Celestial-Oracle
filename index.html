@@ -70,8 +70,9 @@
       }
     </style>
     <script>
-      // Shim process.env for browser environments where it's not defined
-      window.process = window.process || { env: {} };
+      // Safer shim: only define if not already present, and don't overwrite env
+      window.process = window.process || {};
+      window.process.env = window.process.env || {};
     </script>
     <script type="importmap">
 {
@@ -88,7 +89,6 @@
   <body>
     <div id="root"></div>
     <div class="star-bg"></div>
-    <!-- Entry point for the application -->
     <script type="module" src="index.tsx"></script>
   </body>
 </html>

@@ -14,6 +14,7 @@ const App: React.FC = () => {
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [prediction, setPrediction] = useState<PredictionData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [debugKey, setDebugKey] = useState<string | null>(null);
   
   const [currentLanguage, setCurrentLanguage] = useState<Language>(() => {
     return (localStorage.getItem('cosmic_oracle_lang') as Language) || 'en';
@@ -26,20 +27,23 @@ const App: React.FC = () => {
   const handleFormSubmit = async (details: UserDetails) => {
     setLoading(true);
     setError(null);
+    setDebugKey(null);
     const detailsWithCurrentLang = { ...details, language: currentLanguage };
     
     try {
-      // The API key is assumed to be handled by the environment/SDK.
-      // We remove the manual check to allow the platform to inject it correctly.
       const data = await getAstrologyPrediction(detailsWithCurrentLang);
       setUserDetails(detailsWithCurrentLang);
       setPrediction(data);
     } catch (err: any) {
       console.error("Prediction Fetch Error:", err);
-      // Detailed error message to help debug potential environment issues
+      
+      // Capturing what the app sees as the API Key for debugging
+      const currentKey = process.env.API_KEY;
+      setDebugKey(currentKey === undefined ? "UNDEFINED" : currentKey === "" ? "EMPTY STRING" : `EXISTS (${currentKey.substring(0, 4)}...)`);
+
       setError(currentLanguage === 'si' 
-        ? "විශ්වීය දත්ත ලබා ගැනීමට නොහැකි විය. කරුණාකර ඔබගේ API_KEY එක සහ අන්තර්ජාල සබඳතාවය පරීක්ෂා කරන්න." 
-        : "The celestial signals are weak. Please ensure your API_KEY is valid and your connection is stable.");
+        ? "විශ්වීය දත්ත ලබා ගැනීමට නොහැකි විය. කරුණාකර ඔබගේ API_KEY එක පරීක්ෂා කර නැවත උත්සාහ කරන්න." 
+        : "The celestial signals are weak. Please check your API_KEY configuration and try again.");
     } finally {
       setLoading(false);
     }
@@ -49,6 +53,7 @@ const App: React.FC = () => {
     setUserDetails(null);
     setPrediction(null);
     setError(null);
+    setDebugKey(null);
   };
 
   const toggleLanguage = (lang: Language) => {
@@ -83,7 +88,6 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {/* Form stays mounted to prevent losing input data on error */}
         <div className={prediction ? 'hidden' : 'block animate-fade-in'}>
           <AstroForm 
             onSubmit={handleFormSubmit} 
@@ -99,7 +103,13 @@ const App: React.FC = () => {
                 </svg>
                 <span className="font-bold uppercase tracking-[0.5em] text-lg">Celestial Obstacle</span>
               </div>
-              <p className="text-2xl md:text-3xl font-medium leading-relaxed">{error}</p>
+              <p className="text-2xl md:text-3xl font-medium leading-relaxed mb-4">{error}</p>
+              
+              {/* DEBUG INFO */}
+              <div className="mt-6 p-4 bg-black/40 rounded-xl border border-white/10 text-xs font-mono tracking-wider opacity-70">
+                <p>DEBUG [process.env.API_KEY]: <span className="text-yellow-400 font-bold">{debugKey}</span></p>
+                <p className="mt-2 text-[10px] text-white/30 uppercase">If 'UNDEFINED', your build tool or Netlify is not injecting the variable correctly.</p>
+              </div>
             </div>
           )}
         </div>
