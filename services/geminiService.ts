@@ -14,9 +14,9 @@ function getApiKey(): string {
 }
 
 /**
- * Generates a category-based prediction for a specific zodiac sign.
+ * Generates category-based predictions for ALL 12 zodiac signs in one go.
  */
-export async function getSignCategoryPrediction(signName: string, symbol: string, language: Language): Promise<SignCategoryPrediction> {
+export async function getAllSignPredictions(language: Language): Promise<Record<string, SignCategoryPrediction>> {
   const apiKey = getApiKey();
   const ai = new GoogleGenAI({ apiKey });
 
@@ -24,16 +24,36 @@ export async function getSignCategoryPrediction(signName: string, symbol: string
     ? "IMPORTANT: All values in the JSON response MUST be strictly in Sinhala language (සිංහල). Keep the tone mystical and professional." 
     : "All output text MUST be in English.";
 
+  // Define the sign structure explicitly since $ref is not supported
+  const signSchema = {
+    type: Type.OBJECT,
+    properties: {
+      sign: { type: Type.STRING },
+      symbol: { type: Type.STRING },
+      categories: {
+        type: Type.OBJECT,
+        properties: {
+          general: { type: Type.STRING },
+          love: { type: Type.STRING },
+          money: { type: Type.STRING },
+          career: { type: Type.STRING },
+          education: { type: Type.STRING },
+          health: { type: Type.STRING },
+        },
+        required: ["general", "love", "money", "career", "education", "health"]
+      }
+    },
+    required: ["sign", "symbol", "categories"]
+  };
+
   const prompt = `
-    Provide a detailed astrological outlook for the zodiac sign ${signName} for the current period.
+    Provide a detailed astrological outlook for ALL 12 zodiac signs for the current period.
+    Signs: Aries, Taurus, Gemini, Cancer, Leo, Virgo, Libra, Scorpio, Sagittarius, Capricorn, Aquarius, Pisces.
     ${langInstruction}
-    Return the response in JSON format with insights for these categories:
-    1. General Path (A summary of the current cosmic vibration)
-    2. Love & Romance (Dating, relationships, and emotional connections)
-    3. Wealth & Money (Financial outlook, investments, and spending)
-    4. Career & Job (Work environment, professional growth, and ambitions)
-    5. Education (Learning, exams, and intellectual pursuits)
-    6. Health (Physical well-being and energy levels)
+    Return a JSON object where each key is the lowercase sign ID (e.g. "aries", "taurus") and the value contains:
+    1. Sign name (in ${language === 'si' ? 'Sinhala' : 'English'})
+    2. Symbol (emoji)
+    3. Insights for these categories: General Path, Love & Romance, Wealth & Money, Career & Job, Education, Health.
   `;
 
   const response = await ai.models.generateContent({
@@ -44,20 +64,26 @@ export async function getSignCategoryPrediction(signName: string, symbol: string
       responseSchema: {
         type: Type.OBJECT,
         properties: {
-          categories: {
+          predictions: {
             type: Type.OBJECT,
             properties: {
-              general: { type: Type.STRING },
-              love: { type: Type.STRING },
-              money: { type: Type.STRING },
-              career: { type: Type.STRING },
-              education: { type: Type.STRING },
-              health: { type: Type.STRING }
+              aries: signSchema,
+              taurus: signSchema,
+              gemini: signSchema,
+              cancer: signSchema,
+              leo: signSchema,
+              virgo: signSchema,
+              libra: signSchema,
+              scorpio: signSchema,
+              sagittarius: signSchema,
+              capricorn: signSchema,
+              aquarius: signSchema,
+              pisces: signSchema
             },
-            required: ["general", "love", "money", "career", "education", "health"]
+            required: ["aries", "taurus", "gemini", "cancer", "leo", "virgo", "libra", "scorpio", "sagittarius", "capricorn", "aquarius", "pisces"]
           }
         },
-        required: ["categories"]
+        required: ["predictions"]
       }
     }
   });
@@ -65,11 +91,19 @@ export async function getSignCategoryPrediction(signName: string, symbol: string
   const text = response.text;
   if (!text) throw new Error('The oracle returned an empty signal.');
   const parsed = JSON.parse(text);
-  return {
-    sign: signName,
-    symbol: symbol,
-    categories: parsed.categories
-  };
+  
+  // Extract the inner "predictions" map
+  const results: Record<string, SignCategoryPrediction> = {};
+  Object.keys(parsed.predictions).forEach(key => {
+    const data = parsed.predictions[key];
+    results[key] = {
+      sign: data.sign,
+      symbol: data.symbol,
+      categories: data.categories
+    };
+  });
+  
+  return results;
 }
 
 /**

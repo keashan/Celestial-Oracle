@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { UserDetails, PredictionData, Language, AppView, SignCategoryPrediction, ZODIAC_SIGNS } from './types.ts';
-import { getAstrologyPrediction, getSignCategoryPrediction } from './services/geminiService.ts';
+import { getAstrologyPrediction, getAllSignPredictions } from './services/geminiService.ts';
 import AstroForm from './components/AstroForm.tsx';
 import PredictionDisplay from './components/PredictionDisplay.tsx';
 import ChatInterface from './components/ChatInterface.tsx';
@@ -22,6 +22,9 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [rawError, setRawError] = useState<string | null>(null);
   
+  // Cache for all sign predictions to avoid repeated API calls
+  const [signCache, setSignCache] = useState<Partial<Record<Language, Record<string, SignCategoryPrediction>>>>({});
+
   // Freemium Ad State
   const [adOverlayActive, setAdOverlayActive] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => Promise<void>) | null>(null);
@@ -37,6 +40,11 @@ const App: React.FC = () => {
   const [hasConsented, setHasConsented] = useState<boolean>(() => {
     return localStorage.getItem('cosmic_oracle_consent') === 'true';
   });
+
+  // Effect to reset scroll position on view change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [view]);
 
   useEffect(() => {
     const checkKeyStatus = async () => {
@@ -84,16 +92,38 @@ const App: React.FC = () => {
   };
 
   const executeSignSelect = async (signId: string) => {
-    const sign = ZODIAC_SIGNS.find(s => s.id === signId);
-    if (!sign) return;
+    // 1. Check if we already have the predictions for ALL signs in this language
+    const currentLangCache = signCache[currentLanguage];
     
+    if (currentLangCache && currentLangCache[signId]) {
+      // Instant reveal from cache
+      setSignDetail(currentLangCache[signId]);
+      setView('SIGN_DETAIL');
+      return;
+    }
+
+    // 2. Otherwise, fetch all 12 signs in one network request
     setLoading(true);
     setError(null);
     try {
-      const data = await getSignCategoryPrediction(sign[currentLanguage], sign.symbol, currentLanguage);
-      setSignDetail(data);
-      setView('SIGN_DETAIL');
+      const allData = await getAllSignPredictions(currentLanguage);
+      
+      // Update cache
+      setSignCache(prev => ({
+        ...prev,
+        [currentLanguage]: allData
+      }));
+
+      // Pick the one the user clicked on
+      const selectedSignData = allData[signId];
+      if (selectedSignData) {
+        setSignDetail(selectedSignData);
+        setView('SIGN_DETAIL');
+      } else {
+        throw new Error("Sign data missing from alignment.");
+      }
     } catch (err: any) {
+      console.error(err);
       setError(currentLanguage === 'si' ? "දත්ත ලබා ගැනීමට නොහැකි විය." : "Failed to fetch celestial data.");
     } finally {
       setLoading(false);
@@ -106,6 +136,7 @@ const App: React.FC = () => {
   };
 
   const handleSignSelect = (signId: string) => {
+    // ALWAYS trigger the ad view irrespective of whether the data is cached or not.
     setPendingAction(() => () => executeSignSelect(signId));
     setAdOverlayActive(true);
   };

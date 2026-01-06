@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Language } from '../types.ts';
 
 interface AdOverlayProps {
@@ -13,27 +13,44 @@ const AdOverlay: React.FC<AdOverlayProps> = ({ onComplete, onClose, language }) 
   const [isFinished, setIsFinished] = useState(false);
   const [isAdBlockerActive, setIsAdBlockerActive] = useState(false);
   const [isAdLoading, setIsAdLoading] = useState(true);
+  
+  const adTriggeredRef = useRef(false);
 
   useEffect(() => {
+    // FAIL-SAFE: If ad doesn't load/trigger in 7 seconds, assume block/failure
+    const safetyTimeout = setTimeout(() => {
+      if (isAdLoading && !adTriggeredRef.current) {
+        console.warn("AdSense safety timeout reached. Falling back to manual unlock.");
+        setIsAdLoading(false);
+        setIsAdBlockerActive(true);
+      }
+    }, 7000);
+
     const triggerAd = () => {
-      if (typeof (window as any).adBreak === 'function') {
+      const win = window as any;
+      if (typeof win.adBreak === 'function') {
         try {
-          (window as any).adBreak({
+          win.adBreak({
             type: 'reward',
             name: 'unlock_prediction',
             beforeReward: (showAdFn: () => void) => {
+              adTriggeredRef.current = true;
               setIsAdLoading(false);
               showAdFn();
             },
             adDismissed: () => {
+              adTriggeredRef.current = true;
               setIsAdBlockerActive(true);
               setIsAdLoading(false);
             },
             adViewed: () => {
+              adTriggeredRef.current = true;
               onComplete();
             },
             adBreakDone: (placementInfo: any) => {
+              adTriggeredRef.current = true;
               console.log('AdBreak info:', placementInfo);
+              // If ad wasn't viewed (blocked, no fill, etc)
               if (placementInfo.breakStatus !== 'adViewed') {
                 setIsAdBlockerActive(true);
                 setIsAdLoading(false);
@@ -41,19 +58,24 @@ const AdOverlay: React.FC<AdOverlayProps> = ({ onComplete, onClose, language }) 
             }
           });
         } catch (e) {
-          console.error("AdSense Error:", e);
+          console.error("AdSense execution error:", e);
           setIsAdBlockerActive(true);
           setIsAdLoading(false);
         }
       } else {
+        // adBreak not found (AdBlocker likely)
         setIsAdBlockerActive(true);
         setIsAdLoading(false);
       }
     };
 
-    // Small delay to ensure SDK is initialized
-    const timer = setTimeout(triggerAd, 2000);
-    return () => clearTimeout(timer);
+    // Small delay to ensure SDK is initialized and DOM is ready
+    const timer = setTimeout(triggerAd, 2500);
+    
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(safetyTimeout);
+    };
   }, [onComplete]);
 
   useEffect(() => {
@@ -91,13 +113,14 @@ const AdOverlay: React.FC<AdOverlayProps> = ({ onComplete, onClose, language }) 
             </svg>
           </div>
           <h2 className="text-2xl font-bold uppercase tracking-widest text-white">{t.title}</h2>
-          <p className="text-white/50 text-sm leading-relaxed">{t.subtitle}</p>
+          <p className="text-white/50 text-sm leading-relaxed min-h-[40px]">{t.subtitle}</p>
         </div>
 
         <div className="relative pt-4 z-10">
           {isAdLoading ? (
-            <div className="flex justify-center py-4">
+            <div className="flex flex-col items-center space-y-4 py-4">
               <div className="w-8 h-8 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin"></div>
+              <span className="text-[10px] text-white/20 uppercase tracking-widest animate-pulse">Waiting for Stars...</span>
             </div>
           ) : isAdBlockerActive && !isFinished ? (
             <div className="space-y-4">
@@ -112,7 +135,7 @@ const AdOverlay: React.FC<AdOverlayProps> = ({ onComplete, onClose, language }) 
           ) : isFinished ? (
             <button 
               onClick={onComplete}
-              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 py-5 rounded-2xl font-bold uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-white"
+              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 py-5 rounded-2xl font-bold uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-white animate-fade-in"
             >
               {t.btn}
             </button>
@@ -121,7 +144,7 @@ const AdOverlay: React.FC<AdOverlayProps> = ({ onComplete, onClose, language }) 
 
         <button 
           onClick={onClose}
-          className="text-white/20 text-[10px] uppercase tracking-widest hover:text-white/40 transition-colors pt-4 block w-full"
+          className="text-white/20 text-[10px] uppercase tracking-widest hover:text-white/40 transition-colors pt-4 block w-full relative z-10"
         >
           {t.close}
         </button>
