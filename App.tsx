@@ -174,7 +174,10 @@ const App: React.FC = () => {
             <PredictionDisplay prediction={prediction} userName={userDetails.name} language={currentLanguage} />
             <ChatInterface userDetails={userDetails} prediction={prediction} onLanguageChange={toggleLanguage} currentLanguage={currentLanguage} />
             <div className="flex justify-center">
-              <button onClick={handleReset} className="px-10 py-4 rounded-full glass border border-white/20 text-white/70 hover:text-white hover:border-white/50 hover:bg-white/10 transition-all text-[length:var(--fs-btn-text)] font-bold tracking-[0.4em] uppercase shadow-xl active:scale-95">
+              <button 
+                onClick={handleReset} 
+                className="px-12 py-5 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold transition-all transform hover:scale-[1.01] active:scale-[0.98] shadow-[0_15px_40px_rgba(124,58,237,0.3)] tracking-[0.3em] uppercase text-[length:var(--fs-btn-text)]"
+              >
                 {currentLanguage === 'si' ? "නැවත තරු විමසන්න" : "Return to the Stars"}
               </button>
             </div>
