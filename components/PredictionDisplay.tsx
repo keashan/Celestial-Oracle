@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { PredictionData, Language } from '../types.ts';
+import { PredictionData, Language, ZODIAC_SIGNS } from '../types.ts';
 
 interface PredictionDisplayProps {
   prediction: PredictionData;
@@ -10,11 +10,17 @@ interface PredictionDisplayProps {
 
 const PredictionDisplay: React.FC<PredictionDisplayProps> = ({ prediction, userName, language }) => {
   const intro = language === 'si' 
-    ? `ආයුබෝවන්, ${userName}. ඔබ වෙනුවෙන් සැකසූ ගැඹුරු විශ්වීය විශ්ලේෂණය මෙන්න.`
-    : `Greetings, ${userName}. Your personalized deep-dive celestial analysis has been manifested.`;
+    ? "ඔබ වෙනුවෙන් සැකසූ ගැඹුරු විශ්වීය විශ්ලේෂණය මෙන්න."
+    : "Your personalized deep-dive celestial analysis has been manifested.";
 
   const analysisHeader = language === 'si' ? "ඔබේ දෛවයේ ගැඹුරු විශ්ලේෂණය" : "Your Deep-Dive Analysis";
   const monthlyHeader = language === 'si' ? "මාසික මඟපෙන්වීම" : "Monthly Cosmic Guidance";
+
+  // Find the sign info to show both languages in the sub-header
+  const signInfo = ZODIAC_SIGNS.find(s => s.symbol === prediction.symbol);
+  const signDisplay = signInfo 
+    ? `${signInfo.si} (${signInfo.en})`
+    : prediction.zodiacSign;
 
   return (
     <div className="space-y-16">
@@ -24,15 +30,27 @@ const PredictionDisplay: React.FC<PredictionDisplayProps> = ({ prediction, userN
           {prediction.symbol}
         </div>
         
-        <div className="text-8xl md:text-[10rem] drop-shadow-[0_0_30px_rgba(255,255,255,0.4)] animate-pulse shrink-0">
+        <div className="text-6xl md:text-8xl drop-shadow-[0_0_30px_rgba(255,255,255,0.4)] animate-pulse shrink-0">
           {prediction.symbol}
         </div>
         
         <div className="relative z-10 text-center md:text-left space-y-4">
           <div className="text-white/40 uppercase tracking-[0.4em] text-xs font-bold">{intro}</div>
-          <h2 className="text-5xl md:text-7xl font-bold text-white tracking-tight leading-none italic font-serif">
-            {prediction.zodiacSign}
+          
+          {/* Circled area updated to Name of the person */}
+          <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight leading-none italic font-serif">
+            {userName}
           </h2>
+
+          {/* Sub-header with Zodiac Sign and Image (Symbol) */}
+          <div className="flex items-center justify-center md:justify-start space-x-3 pt-2">
+            <div className="text-purple-400 font-bold text-lg md:text-2xl tracking-wide font-serif">
+              {signDisplay}
+            </div>
+            <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center border border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+               <span className="text-xl leading-none">{prediction.symbol}</span>
+            </div>
+          </div>
         </div>
       </div>
 

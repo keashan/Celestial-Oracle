@@ -72,6 +72,7 @@ const App: React.FC = () => {
   };
 
   const executeFormSubmit = async (details: UserDetails) => {
+    if (loading) return; // Prevent double trigger
     setLoading(true);
     setError(null);
     try {
@@ -87,6 +88,7 @@ const App: React.FC = () => {
   };
 
   const executeMatchSubmit = async (details: MatchDetails) => {
+    if (loading) return;
     setLoading(true);
     setError(null);
     try {
@@ -109,6 +111,7 @@ const App: React.FC = () => {
       return;
     }
 
+    if (loading) return;
     setLoading(true);
     setError(null);
     try {
@@ -145,7 +148,7 @@ const App: React.FC = () => {
 
   const handleAdComplete = () => {
     setAdOverlayActive(false);
-    if (pendingAction) {
+    if (pendingAction && !loading) {
       pendingAction();
       setPendingAction(null);
     }
