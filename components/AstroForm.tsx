@@ -5,7 +5,6 @@ import { UserDetails, Language } from '../types.ts';
 interface AstroFormProps {
   onSubmit: (details: UserDetails) => void;
   currentLanguage: Language;
-  onLanguageChange: (lang: Language) => void;
   disabled?: boolean;
 }
 
@@ -44,7 +43,7 @@ const translations = {
   }
 };
 
-const AstroForm: React.FC<AstroFormProps> = ({ onSubmit, currentLanguage, onLanguageChange, disabled }) => {
+const AstroForm: React.FC<AstroFormProps> = ({ onSubmit, currentLanguage, disabled }) => {
   const [formData, setFormData] = useState<UserDetails>({
     name: '',
     birthDate: '',
@@ -80,29 +79,8 @@ const AstroForm: React.FC<AstroFormProps> = ({ onSubmit, currentLanguage, onLang
     <div className={`glass p-8 md:p-12 rounded-[2.5rem] shadow-2xl w-full max-w-4xl mx-auto border border-white/10 relative overflow-hidden transition-all duration-500 ${disabled ? 'opacity-30 pointer-events-none scale-[0.98] grayscale' : 'opacity-100'}`}>
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent"></div>
       
-      <h2 className="text-[length:var(--fs-heading-main)] font-bold text-white mb-8 text-center tracking-tight leading-tight">{t.title}</h2>
+      <h2 className="text-[length:var(--fs-heading-main)] font-bold text-white mb-10 text-center tracking-tight leading-tight">{t.title}</h2>
       
-      <div className="flex justify-center mb-10">
-        <div className="bg-white/5 p-1.5 rounded-2xl border border-white/5 flex shadow-inner">
-          <button 
-            type="button"
-            disabled={disabled}
-            onClick={() => onLanguageChange('en')}
-            className={`px-8 py-3 rounded-xl text-[length:var(--fs-btn-text)] font-bold transition-all duration-300 ${currentLanguage === 'en' ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg' : 'text-white/30 hover:text-white/60'}`}
-          >
-            English
-          </button>
-          <button 
-            type="button"
-            disabled={disabled}
-            onClick={() => onLanguageChange('si')}
-            className={`px-8 py-3 rounded-xl text-[length:var(--fs-btn-text)] font-bold transition-all duration-300 ${currentLanguage === 'si' ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg' : 'text-white/30 hover:text-white/60'}`}
-          >
-            සිංහල
-          </button>
-        </div>
-      </div>
-
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="col-span-1 md:col-span-2 space-y-3">
           <label className="text-[length:var(--fs-form-label)] font-bold text-white/70 uppercase tracking-[0.2em] ml-2">{t.nameLabel}</label>

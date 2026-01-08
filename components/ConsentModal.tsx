@@ -31,31 +31,31 @@ const ConsentModal: React.FC<ConsentModalProps> = ({ onAccept, language, onLangu
   const t = translations[language];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#0a0a1a]/95 backdrop-blur-xl animate-fade-in overflow-y-auto">
-      <div className="glass max-w-2xl w-full p-8 md:p-10 rounded-[2.5rem] border border-white/10 shadow-2xl space-y-8 my-auto">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-[#0a0a1a]/95 backdrop-blur-xl animate-fade-in overflow-y-auto">
+      <div className="glass max-w-2xl w-full p-8 md:p-10 rounded-[2.5rem] border border-white/10 shadow-2xl space-y-8 my-auto relative overflow-hidden">
         
-        <div className="flex justify-center">
-          <div className="bg-white/5 p-1.5 rounded-xl border border-white/5 flex shadow-inner">
-            <button 
-              type="button"
-              onClick={() => onLanguageChange('en')}
-              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${language === 'en' ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg' : 'text-white/30 hover:text-white/60'}`}
-            >
-              English
-            </button>
-            <button 
-              type="button"
-              onClick={() => onLanguageChange('si')}
-              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${language === 'si' ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg' : 'text-white/30 hover:text-white/60'}`}
-            >
-              සිංහල
-            </button>
-          </div>
-        </div>
-
         <div className="text-center space-y-3">
           <h2 className="text-[length:var(--fs-heading-main)] font-bold text-white tracking-widest uppercase">{t.title}</h2>
-          <p className="text-white/50 text-[length:var(--fs-body)] italic max-w-lg mx-auto leading-relaxed">{t.intro}</p>
+          
+          {/* Internal Language Toggle for the Modal */}
+          <div className="flex justify-center mt-4">
+            <div className="bg-white/5 p-1 rounded-xl border border-white/5 flex shadow-inner">
+              <button 
+                onClick={() => onLanguageChange('en')}
+                className={`px-5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${language === 'en' ? 'bg-purple-600 text-white shadow-lg' : 'text-white/30'}`}
+              >
+                English
+              </button>
+              <button 
+                onClick={() => onLanguageChange('si')}
+                className={`px-5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${language === 'si' ? 'bg-purple-600 text-white shadow-lg' : 'text-white/30'}`}
+              >
+                සිංහල
+              </button>
+            </div>
+          </div>
+
+          <p className="text-white/50 text-[length:var(--fs-body)] italic max-w-lg mx-auto leading-relaxed mt-4">{t.intro}</p>
         </div>
 
         <div className="space-y-6 bg-white/5 p-8 rounded-2xl border border-white/5">

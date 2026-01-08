@@ -7,10 +7,9 @@ interface ChatInterfaceProps {
   userDetails: UserDetails;
   prediction: PredictionData;
   currentLanguage: Language;
-  onLanguageChange: (lang: Language) => void;
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ userDetails, prediction, currentLanguage, onLanguageChange }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ userDetails, prediction, currentLanguage }) => {
   const [messages, setMessages] = useState<Message[]>(() => [{ 
     role: 'assistant', 
     content: currentLanguage === 'si' 
@@ -70,21 +69,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userDetails, prediction, 
           <span className="text-white/70 text-sm font-bold uppercase tracking-[0.3em]">
             {currentLanguage === 'si' ? 'විශ්වීය උපදේශනය' : 'Celestial Bridge'}
           </span>
-        </div>
-        
-        <div className="flex bg-white/5 p-1 rounded-xl border border-white/5">
-          <button 
-            onClick={() => onLanguageChange('en')}
-            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${currentLanguage === 'en' ? 'bg-purple-600 text-white shadow-lg' : 'text-white/40'}`}
-          >
-            EN
-          </button>
-          <button 
-            onClick={() => onLanguageChange('si')}
-            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${currentLanguage === 'si' ? 'bg-purple-600 text-white shadow-lg' : 'text-white/40'}`}
-          >
-            SI
-          </button>
         </div>
       </div>
 

@@ -5,11 +5,10 @@ import { MatchDetails, UserDetails, Language } from '../types.ts';
 interface MatchFormProps {
   onSubmit: (details: MatchDetails) => void;
   currentLanguage: Language;
-  onLanguageChange: (lang: Language) => void;
   disabled?: boolean;
 }
 
-const MatchForm: React.FC<MatchFormProps> = ({ onSubmit, currentLanguage, onLanguageChange, disabled }) => {
+const MatchForm: React.FC<MatchFormProps> = ({ onSubmit, currentLanguage, disabled }) => {
   const [person1, setPerson1] = useState<UserDetails>({
     name: '', birthDate: '', birthTime: '', birthLocation: '', birthState: '', birthCountry: '', language: currentLanguage, additionalContext: ''
   });
@@ -130,15 +129,8 @@ const MatchForm: React.FC<MatchFormProps> = ({ onSubmit, currentLanguage, onLang
       {/* Circle/Gradient Bar Effect */}
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent"></div>
       
-      <h2 className="text-[length:var(--fs-heading-main)] font-bold text-white mb-8 text-center">{t.title}</h2>
+      <h2 className="text-[length:var(--fs-heading-main)] font-bold text-white mb-10 text-center">{t.title}</h2>
       
-      <div className="flex justify-center mb-10">
-        <div className="bg-white/5 p-1 rounded-xl flex border border-white/5 shadow-inner">
-          <button onClick={() => onLanguageChange('en')} className={`px-6 py-2 rounded-lg text-xs font-bold transition-all ${currentLanguage === 'en' ? 'bg-purple-600 text-white shadow-lg' : 'text-white/30'}`}>English</button>
-          <button onClick={() => onLanguageChange('si')} className={`px-6 py-2 rounded-lg text-xs font-bold transition-all ${currentLanguage === 'si' ? 'bg-purple-600 text-white shadow-lg' : 'text-white/30'}`}>සිංහල</button>
-        </div>
-      </div>
-
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {renderFields(1, person1)}

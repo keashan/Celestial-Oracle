@@ -198,15 +198,32 @@ const App: React.FC = () => {
   
   return (
     <div className="min-h-screen flex flex-col items-center p-6 md:p-8 overflow-x-hidden text-white">
-      {/* Header Container: Centered Header and Right-Aligned Nav row */}
+      {/* Header Container: Centered Header and Navigation Row */}
       <div className="w-full max-w-[1500px] flex flex-col mb-12 gap-8">
         {/* Row 1: Brand/Header (Centered) */}
         <div className="w-full flex justify-center cursor-pointer" onClick={handleReset}>
           <Header language={currentLanguage} />
         </div>
         
-        {/* Row 2: Navigation Buttons (Right Aligned) */}
-        <div className="w-full flex justify-center md:justify-end">
+        {/* Row 2: Global Language Toggle & Navigation Buttons */}
+        <div className="w-full flex flex-col md:flex-row justify-between items-center gap-6">
+          {/* Global Language Toggle */}
+          <div className="bg-white/5 p-1 rounded-2xl border border-white/5 flex shadow-inner shrink-0 relative z-[60]">
+            <button 
+              onClick={() => toggleLanguage('en')}
+              className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${currentLanguage === 'en' ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg' : 'text-white/30 hover:text-white/60'}`}
+            >
+              English
+            </button>
+            <button 
+              onClick={() => toggleLanguage('si')}
+              className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${currentLanguage === 'si' ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg' : 'text-white/30 hover:text-white/60'}`}
+            >
+              සිංහල
+            </button>
+          </div>
+
+          {/* Navigation Buttons (Right Aligned on Desktop) */}
           <div className="flex flex-wrap justify-center md:justify-end gap-3 md:gap-4">
             {visibleButtons.map((btn) => (
               <button 
@@ -221,7 +238,13 @@ const App: React.FC = () => {
         </div>
       </div>
       
-      {!hasConsented && <ConsentModal onAccept={handleAcceptConsent} language={currentLanguage} onLanguageChange={toggleLanguage} />}
+      {!hasConsented && (
+        <ConsentModal 
+          onAccept={handleAcceptConsent} 
+          language={currentLanguage} 
+          onLanguageChange={toggleLanguage}
+        />
+      )}
 
       {adOverlayActive && (
         <AdOverlay 
@@ -248,7 +271,6 @@ const App: React.FC = () => {
             <ZodiacHome 
               language={currentLanguage} 
               onSignSelect={handleSignSelect} 
-              onLanguageChange={toggleLanguage}
             />
           )}
 
@@ -267,7 +289,6 @@ const App: React.FC = () => {
             <AstroForm 
               onSubmit={handleFormSubmit} 
               currentLanguage={currentLanguage} 
-              onLanguageChange={toggleLanguage}
               disabled={loading}
             />
           )}
@@ -276,7 +297,6 @@ const App: React.FC = () => {
             <MatchForm 
               onSubmit={handleMatchSubmit} 
               currentLanguage={currentLanguage} 
-              onLanguageChange={toggleLanguage}
               disabled={loading}
             />
           )}
@@ -296,7 +316,7 @@ const App: React.FC = () => {
           {view === 'RESULT' && prediction && userDetails && (
             <div className="space-y-8 animate-fade-in pb-12">
               <PredictionDisplay prediction={prediction} userName={userDetails.name} language={currentLanguage} />
-              <ChatInterface userDetails={userDetails} prediction={prediction} onLanguageChange={toggleLanguage} currentLanguage={currentLanguage} />
+              <ChatInterface userDetails={userDetails} prediction={prediction} currentLanguage={currentLanguage} />
               <div className="flex justify-center">
                 <button onClick={handleReset} className="px-12 py-5 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:brightness-110 text-white font-bold uppercase tracking-[0.3em] transition-all hover:scale-[1.01] active:scale-[0.98] shadow-lg shadow-blue-500/20">
                   {currentLanguage === 'si' ? "නැවත මුල් පිටුවට" : "Return to Home"}
