@@ -8,7 +8,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ language }) => {
   const badgeText = language === 'si' ? 'දිව්‍යමය ප්‍රඥාව' : 'Ethereal Wisdom';
-  const tagline = language === 'si' ? 'තරු අතර සටහන් වූ' : 'Written in the Stars';
+  const tagline = language === 'si' ? 'තරු අතර සටහන් වූ ‌දෛවය' : 'Destiny written in the Stars';
   const brandName = language === 'si' ? 'විශ්වීය දෛවඥයා' : 'Cosmic Oracle';
 
   return (

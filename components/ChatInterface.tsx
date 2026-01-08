@@ -63,7 +63,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userDetails, prediction, 
   };
 
   return (
-    <div className="glass rounded-[2.5rem] border border-white/10 flex flex-col h-[700px] overflow-hidden shadow-2xl">
+    <div className="glass rounded-[2.5rem] border border-white/10 flex flex-col h-[650px] overflow-hidden shadow-2xl">
       <div className="bg-white/5 px-8 py-5 border-b border-white/10 flex items-center justify-between shrink-0">
         <div className="flex items-center space-x-4">
           <div className="w-4 h-4 rounded-full bg-purple-400 animate-pulse shadow-[0_0_10px_rgba(168,85,247,0.5)]"></div>
@@ -88,7 +88,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userDetails, prediction, 
         </div>
       </div>
 
-      <div ref={scrollRef} className="flex-grow overflow-y-auto p-8 space-y-6">
+      <div ref={scrollRef} className="flex-grow overflow-y-auto p-6 space-y-6">
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
             <div className={`max-w-[85%] px-6 py-4 rounded-2xl text-[length:var(--fs-chat-msg)] leading-relaxed shadow-xl ${

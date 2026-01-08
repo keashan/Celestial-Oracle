@@ -72,7 +72,7 @@ const App: React.FC = () => {
   };
 
   const executeFormSubmit = async (details: UserDetails) => {
-    if (loading) return; // Prevent double trigger
+    if (loading) return; 
     setLoading(true);
     setError(null);
     try {
@@ -206,7 +206,7 @@ const App: React.FC = () => {
   
   return (
     <div className="min-h-screen flex flex-col items-center p-6 md:p-8 overflow-x-hidden text-white">
-      <div className="w-full max-w-5xl flex flex-col md:flex-row justify-between items-center mb-12 gap-8">
+      <div className="w-full max-w-5xl flex flex-col md:flex-row justify-between items-center mb-6 gap-8">
         <div className="cursor-pointer" onClick={handleReset}>
           <Header language={currentLanguage} />
         </div>
@@ -253,7 +253,7 @@ const App: React.FC = () => {
         )}
 
         {view === 'SIGN_DETAIL' && signDetail && (
-          <div className="animate-fade-in space-y-12">
+          <div className="animate-fade-in space-y-8">
             <SignPrediction 
               prediction={signDetail} 
               language={currentLanguage} 
@@ -282,7 +282,7 @@ const App: React.FC = () => {
         )}
 
         {view === 'MATCH_RESULT' && matchPrediction && matchDetails && (
-          <div className="space-y-12 animate-fade-in pb-24">
+          <div className="space-y-8 animate-fade-in pb-12">
             <MatchDisplay prediction={matchPrediction} details={matchDetails} language={currentLanguage} />
             <div className="flex justify-center">
               <button onClick={handleReset} className="px-12 py-5 rounded-2xl bg-gradient-to-r from-pink-600 to-rose-600 hover:brightness-110 text-white font-bold uppercase tracking-[0.3em] transition-all hover:scale-[1.01] active:scale-[0.98] shadow-lg shadow-pink-500/20">
@@ -294,7 +294,7 @@ const App: React.FC = () => {
         )}
 
         {view === 'RESULT' && prediction && userDetails && (
-          <div className="space-y-12 animate-fade-in pb-24">
+          <div className="space-y-8 animate-fade-in pb-12">
             <PredictionDisplay prediction={prediction} userName={userDetails.name} language={currentLanguage} />
             <ChatInterface userDetails={userDetails} prediction={prediction} onLanguageChange={toggleLanguage} currentLanguage={currentLanguage} />
             <div className="flex justify-center">
