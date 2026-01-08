@@ -10,26 +10,28 @@ interface ZodiacHomeProps {
 
 const ZodiacHome: React.FC<ZodiacHomeProps> = ({ language, onSignSelect, onLanguageChange }) => {
   return (
-    <div className="space-y-12 animate-fade-in">
-      <div className="text-center space-y-4">
-        <h2 className="text-[length:var(--fs-heading-main)] font-bold tracking-tight">
+    <div className="glass p-8 md:p-12 rounded-[2.5rem] shadow-2xl w-full max-w-4xl mx-auto border border-white/10 relative overflow-hidden animate-fade-in">
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent"></div>
+      
+      <div className="text-center space-y-4 mb-10">
+        <h2 className="text-[length:var(--fs-heading-main)] font-bold tracking-tight text-white">
           {language === 'en' ? 'Choose Your Sign' : 'ඔබේ ලග්නය තෝරන්න'}
         </h2>
         <p className="text-white/40 tracking-[0.2em] uppercase text-xs">
           {language === 'en' ? 'Explore the cosmic energies of the 12 signs' : 'ලග්න 12 හි විශ්වීය ශක්තීන් ගවේෂණය කරන්න'}
         </p>
 
-        <div className="flex justify-center mt-6">
-          <div className="bg-white/5 p-1 rounded-xl border border-white/5 flex">
+        <div className="flex justify-center mt-8">
+          <div className="bg-white/5 p-1.5 rounded-2xl border border-white/5 flex shadow-inner">
             <button 
               onClick={() => onLanguageChange('en')}
-              className={`px-6 py-2 rounded-lg text-xs font-bold transition-all ${language === 'en' ? 'bg-purple-600 text-white shadow-lg' : 'text-white/40'}`}
+              className={`px-8 py-3 rounded-xl text-[length:var(--fs-btn-text)] font-bold transition-all duration-300 ${language === 'en' ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg' : 'text-white/30 hover:text-white/60'}`}
             >
               English
             </button>
             <button 
               onClick={() => onLanguageChange('si')}
-              className={`px-6 py-2 rounded-lg text-xs font-bold transition-all ${language === 'si' ? 'bg-purple-600 text-white shadow-lg' : 'text-white/40'}`}
+              className={`px-8 py-3 rounded-xl text-[length:var(--fs-btn-text)] font-bold transition-all duration-300 ${language === 'si' ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg' : 'text-white/30 hover:text-white/60'}`}
             >
               සිංහල
             </button>
@@ -37,20 +39,20 @@ const ZodiacHome: React.FC<ZodiacHomeProps> = ({ language, onSignSelect, onLangu
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 md:gap-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
         {ZODIAC_SIGNS.map((sign) => (
           <button
             key={sign.id}
             onClick={() => onSignSelect(sign.id)}
-            className="group glass p-8 rounded-[2rem] flex flex-col items-center justify-center space-y-4 transition-all hover:scale-[1.05] hover:bg-white/10 active:scale-95 border border-white/5 shadow-xl relative overflow-hidden"
+            className="group glass p-6 rounded-[2rem] flex flex-col items-center justify-center space-y-3 transition-all hover:scale-[1.05] hover:bg-white/10 active:scale-95 border border-white/5 shadow-xl relative overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-b from-purple-500/0 to-purple-500/5 group-hover:to-purple-500/10 transition-all"></div>
-            <span className="text-6xl group-hover:scale-110 transition-transform duration-500 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+            <span className="text-5xl group-hover:scale-110 transition-transform duration-500 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
               {sign.symbol}
             </span>
             <div className="text-center relative z-10">
-              <div className="text-white font-bold tracking-widest uppercase text-sm">{sign.en}</div>
-              <div className="text-purple-400 font-medium text-xs mt-1">{sign.si}</div>
+              <div className="text-white font-bold tracking-widest uppercase text-[10px] md:text-xs">{sign.en}</div>
+              <div className="text-purple-400 font-medium text-[10px] md:text-xs mt-0.5">{sign.si}</div>
             </div>
           </button>
         ))}

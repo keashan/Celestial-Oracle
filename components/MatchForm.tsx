@@ -11,10 +11,10 @@ interface MatchFormProps {
 
 const MatchForm: React.FC<MatchFormProps> = ({ onSubmit, currentLanguage, onLanguageChange, disabled }) => {
   const [person1, setPerson1] = useState<UserDetails>({
-    name: '', birthDate: '', birthTime: '', birthLocation: '', birthState: '', birthCountry: '', language: currentLanguage
+    name: '', birthDate: '', birthTime: '', birthLocation: '', birthState: '', birthCountry: '', language: currentLanguage, additionalContext: ''
   });
   const [person2, setPerson2] = useState<UserDetails>({
-    name: '', birthDate: '', birthTime: '', birthLocation: '', birthState: '', birthCountry: '', language: currentLanguage
+    name: '', birthDate: '', birthTime: '', birthLocation: '', birthState: '', birthCountry: '', language: currentLanguage, additionalContext: ''
   });
 
   const t = currentLanguage === 'si' ? {
@@ -126,7 +126,10 @@ const MatchForm: React.FC<MatchFormProps> = ({ onSubmit, currentLanguage, onLang
   );
 
   return (
-    <div className={`glass p-8 md:p-12 rounded-[2.5rem] w-full max-w-4xl mx-auto border border-white/10 animate-fade-in ${disabled ? 'opacity-30 pointer-events-none' : ''}`}>
+    <div className={`glass p-8 md:p-12 rounded-[2.5rem] w-full max-w-4xl mx-auto border border-white/10 animate-fade-in relative overflow-hidden ${disabled ? 'opacity-30 pointer-events-none' : ''}`}>
+      {/* Circle/Gradient Bar Effect */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent"></div>
+      
       <h2 className="text-[length:var(--fs-heading-main)] font-bold text-white mb-8 text-center">{t.title}</h2>
       
       <div className="flex justify-center mb-10">

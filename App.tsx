@@ -63,14 +63,6 @@ const App: React.FC = () => {
     checkKeyStatus();
   }, []);
 
-  const handleSelectKey = async () => {
-    const aistudio = (window as any).aistudio;
-    if (aistudio && typeof aistudio.openSelectKey === 'function') {
-      await aistudio.openSelectKey();
-      setNeedsApiKey(false);
-    }
-  };
-
   const executeFormSubmit = async (details: UserDetails) => {
     if (loading) return; 
     setLoading(true);
@@ -206,20 +198,26 @@ const App: React.FC = () => {
   
   return (
     <div className="min-h-screen flex flex-col items-center p-6 md:p-8 overflow-x-hidden text-white">
-      <div className="w-full max-w-5xl flex flex-col md:flex-row justify-between items-center mb-6 gap-8">
-        <div className="cursor-pointer" onClick={handleReset}>
+      {/* Header Container: Centered Header and Right-Aligned Nav row */}
+      <div className="w-full max-w-[1500px] flex flex-col mb-12 gap-8">
+        {/* Row 1: Brand/Header (Centered) */}
+        <div className="w-full flex justify-center cursor-pointer" onClick={handleReset}>
           <Header language={currentLanguage} />
         </div>
-        <div className="flex space-x-4">
-          {visibleButtons.map((btn) => (
-            <button 
-              key={btn.id}
-              onClick={btn.action}
-              className={`px-6 py-3 rounded-2xl bg-gradient-to-r ${btn.gradient} hover:brightness-110 text-white text-[10px] md:text-[11px] font-bold uppercase tracking-[0.2em] transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg`}
-            >
-              {btn.label}
-            </button>
-          ))}
+        
+        {/* Row 2: Navigation Buttons (Right Aligned) */}
+        <div className="w-full flex justify-center md:justify-end">
+          <div className="flex flex-wrap justify-center md:justify-end gap-3 md:gap-4">
+            {visibleButtons.map((btn) => (
+              <button 
+                key={btn.id}
+                onClick={btn.action}
+                className={`px-5 py-2.5 md:px-8 md:py-3.5 rounded-2xl bg-gradient-to-r ${btn.gradient} hover:brightness-110 text-white text-[10px] md:text-[11px] font-bold uppercase tracking-[0.2em] transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg`}
+              >
+                {btn.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
       
@@ -233,79 +231,93 @@ const App: React.FC = () => {
         />
       )}
 
-      <main className="w-full max-w-5xl flex-grow relative">
-        {loading && <div className="fixed inset-0 z-[100] bg-[#0a0a1a]/80 backdrop-blur-lg flex items-center justify-center"><Loader language={currentLanguage} /></div>}
+      {/* Main Layout Wrapper: Flex container for Content + Sidebar */}
+      <div className="w-full max-w-[1500px] flex flex-col lg:flex-row gap-8 items-start">
+        <main className="flex-grow w-full max-w-5xl relative">
+          {loading && <div className="fixed inset-0 z-[100] bg-[#0a0a1a]/80 backdrop-blur-lg flex items-center justify-center"><Loader language={currentLanguage} /></div>}
 
-        {error && (
-          <div className="mb-8 p-6 glass rounded-2xl text-red-400 text-center border border-red-500/20 bg-red-500/5 shadow-xl animate-fade-in">
-             <p className="font-bold uppercase tracking-widest mb-2">Celestial Obstacle</p>
-             <p className="text-sm opacity-80">{error}</p>
-             <button onClick={() => setError(null)} className="mt-4 text-xs underline uppercase tracking-widest text-white/50">Dismiss</button>
-          </div>
-        )}
+          {error && (
+            <div className="mb-8 p-6 glass rounded-2xl text-red-400 text-center border border-red-500/20 bg-red-500/5 shadow-xl animate-fade-in">
+               <p className="font-bold uppercase tracking-widest mb-2">Celestial Obstacle</p>
+               <p className="text-sm opacity-80">{error}</p>
+               <button onClick={() => setError(null)} className="mt-4 text-xs underline uppercase tracking-widest text-white/50">Dismiss</button>
+            </div>
+          )}
 
-        {view === 'HOME' && (
-          <ZodiacHome 
-            language={currentLanguage} 
-            onSignSelect={handleSignSelect} 
-            onLanguageChange={toggleLanguage}
-          />
-        )}
-
-        {view === 'SIGN_DETAIL' && signDetail && (
-          <div className="animate-fade-in space-y-8">
-            <SignPrediction 
-              prediction={signDetail} 
+          {view === 'HOME' && (
+            <ZodiacHome 
               language={currentLanguage} 
-              onBack={handleReset} 
-              onGoToForm={() => setView('FORM')}
+              onSignSelect={handleSignSelect} 
+              onLanguageChange={toggleLanguage}
             />
-          </div>
-        )}
+          )}
 
-        {view === 'FORM' && (
-          <AstroForm 
-            onSubmit={handleFormSubmit} 
-            currentLanguage={currentLanguage} 
-            onLanguageChange={toggleLanguage}
-            disabled={loading}
-          />
-        )}
-
-        {view === 'MATCH_FORM' && (
-          <MatchForm 
-            onSubmit={handleMatchSubmit} 
-            currentLanguage={currentLanguage} 
-            onLanguageChange={toggleLanguage}
-            disabled={loading}
-          />
-        )}
-
-        {view === 'MATCH_RESULT' && matchPrediction && matchDetails && (
-          <div className="space-y-8 animate-fade-in pb-12">
-            <MatchDisplay prediction={matchPrediction} details={matchDetails} language={currentLanguage} />
-            <div className="flex justify-center">
-              <button onClick={handleReset} className="px-12 py-5 rounded-2xl bg-gradient-to-r from-pink-600 to-rose-600 hover:brightness-110 text-white font-bold uppercase tracking-[0.3em] transition-all hover:scale-[1.01] active:scale-[0.98] shadow-lg shadow-pink-500/20">
-                {currentLanguage === 'si' ? "නැවත මුල් පිටුවට" : "Return to Home"}
-              </button>
+          {view === 'SIGN_DETAIL' && signDetail && (
+            <div className="animate-fade-in space-y-8">
+              <SignPrediction 
+                prediction={signDetail} 
+                language={currentLanguage} 
+                onBack={handleReset} 
+                onGoToForm={() => setView('FORM')}
+              />
             </div>
-            <Disclaimer language={currentLanguage} />
-          </div>
-        )}
+          )}
 
-        {view === 'RESULT' && prediction && userDetails && (
-          <div className="space-y-8 animate-fade-in pb-12">
-            <PredictionDisplay prediction={prediction} userName={userDetails.name} language={currentLanguage} />
-            <ChatInterface userDetails={userDetails} prediction={prediction} onLanguageChange={toggleLanguage} currentLanguage={currentLanguage} />
-            <div className="flex justify-center">
-              <button onClick={handleReset} className="px-12 py-5 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:brightness-110 text-white font-bold uppercase tracking-[0.3em] transition-all hover:scale-[1.01] active:scale-[0.98] shadow-lg shadow-blue-500/20">
-                {currentLanguage === 'si' ? "නැවත මුල් පිටුවට" : "Return to Home"}
-              </button>
+          {view === 'FORM' && (
+            <AstroForm 
+              onSubmit={handleFormSubmit} 
+              currentLanguage={currentLanguage} 
+              onLanguageChange={toggleLanguage}
+              disabled={loading}
+            />
+          )}
+
+          {view === 'MATCH_FORM' && (
+            <MatchForm 
+              onSubmit={handleMatchSubmit} 
+              currentLanguage={currentLanguage} 
+              onLanguageChange={toggleLanguage}
+              disabled={loading}
+            />
+          )}
+
+          {view === 'MATCH_RESULT' && matchPrediction && matchDetails && (
+            <div className="space-y-8 animate-fade-in pb-12">
+              <MatchDisplay prediction={matchPrediction} details={matchDetails} language={currentLanguage} />
+              <div className="flex justify-center">
+                <button onClick={handleReset} className="px-12 py-5 rounded-2xl bg-gradient-to-r from-pink-600 to-rose-600 hover:brightness-110 text-white font-bold uppercase tracking-[0.3em] transition-all hover:scale-[1.01] active:scale-[0.98] shadow-lg shadow-pink-500/20">
+                  {currentLanguage === 'si' ? "නැවත මුල් පිටුවට" : "Return to Home"}
+                </button>
+              </div>
+              <Disclaimer language={currentLanguage} />
             </div>
-            <Disclaimer language={currentLanguage} />
+          )}
+
+          {view === 'RESULT' && prediction && userDetails && (
+            <div className="space-y-8 animate-fade-in pb-12">
+              <PredictionDisplay prediction={prediction} userName={userDetails.name} language={currentLanguage} />
+              <ChatInterface userDetails={userDetails} prediction={prediction} onLanguageChange={toggleLanguage} currentLanguage={currentLanguage} />
+              <div className="flex justify-center">
+                <button onClick={handleReset} className="px-12 py-5 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:brightness-110 text-white font-bold uppercase tracking-[0.3em] transition-all hover:scale-[1.01] active:scale-[0.98] shadow-lg shadow-blue-500/20">
+                  {currentLanguage === 'si' ? "නැවත මුල් පිටුවට" : "Return to Home"}
+                </button>
+              </div>
+              <Disclaimer language={currentLanguage} />
+            </div>
+          )}
+        </main>
+
+        {/* Sidebar for Advertisements (Desktop sticky, Mobile bottom) */}
+        <aside className="w-full lg:w-96 shrink-0 lg:sticky lg:top-8 space-y-6">
+          <div className="glass rounded-[2rem] border border-white/10 p-6 min-h-[400px] lg:min-h-[600px] flex flex-col items-center justify-start text-white uppercase tracking-[0.4em] font-bold text-xs">
+            <div className="mb-6 opacity-60 text-center w-full">
+              {currentLanguage === 'si' ? 'විශ්වීය අනුග්‍රහය' : 'Celestial Sponsorship'}
+            </div>
+            {/* Target container for the ad network script in index.html */}
+            <div id="container-184feb0cd95bdf3d09c7ab46b417e225" className="w-full"></div>
           </div>
-        )}
-      </main>
+        </aside>
+      </div>
 
       <footer className="mt-auto py-8 text-white/30 text-xs uppercase tracking-[0.4em] text-center w-full border-t border-white/5">
         &copy; {new Date().getFullYear()} Cosmic Oracle • Handcrafted Wisdom
