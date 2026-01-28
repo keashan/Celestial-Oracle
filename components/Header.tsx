@@ -9,7 +9,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ language }) => {
   const badgeText = language === 'si' ? 'දිව්‍යමය ප්‍රඥාව' : 'Ethereal Wisdom';
   const tagline = language === 'si' ? 'තරු අතර සටහන් වූ ‌දෛවය' : 'Destiny written in the Stars';
-  const brandName = language === 'si' ? 'විශ්වීය දෛවඥයා' : 'Cosmic Oracle';
+  const brandName = 'Cosmic Oracle'; // Brand name remains in English to establish primary language
 
   return (
     <header className="text-center space-y-2 pointer-events-none select-none">
@@ -18,7 +18,7 @@ const Header: React.FC<HeaderProps> = ({ language }) => {
           {badgeText}
         </div>
       </div>
-      <h1 className={`font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-400 ${language === 'si' ? 'text-4xl md:text-6xl py-2' : 'text-5xl md:text-7xl'}`}>
+      <h1 className="font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-400 text-5xl md:text-7xl">
         {brandName}
       </h1>
       <p className="text-white/40 tracking-[0.3em] uppercase text-sm font-light">

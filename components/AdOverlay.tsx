@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Language } from '../types.ts';
 
 interface AdOverlayProps {
@@ -9,92 +9,26 @@ interface AdOverlayProps {
 }
 
 const AdOverlay: React.FC<AdOverlayProps> = ({ onComplete, onClose, language }) => {
-  const [timeLeft, setTimeLeft] = useState(5);
-  const [isFinished, setIsFinished] = useState(false);
-  const [isAdBlockerActive, setIsAdBlockerActive] = useState(false);
   const [isAdLoading, setIsAdLoading] = useState(true);
-  
-  const adTriggeredRef = useRef(false);
 
   useEffect(() => {
-    // FAIL-SAFE: If ad doesn't load/trigger in 7 seconds, assume block/failure
-    const safetyTimeout = setTimeout(() => {
-      if (isAdLoading && !adTriggeredRef.current) {
-        console.warn("AdSense safety timeout reached. Falling back to manual unlock.");
-        setIsAdLoading(false);
-        setIsAdBlockerActive(true);
-      }
-    }, 7000);
+    // Simulate a "Ritual" delay instead of an actual AdSense Video call
+    // This maintains the "Celestial Sponsorship" experience requested without the rewarded ad format.
+    const timer = setTimeout(() => {
+      setIsAdLoading(false);
+    }, 4000);
 
-    const triggerAd = () => {
-      const win = window as any;
-      if (typeof win.adBreak === 'function') {
-        try {
-          win.adBreak({
-            type: 'reward',
-            name: 'unlock_prediction',
-            beforeReward: (showAdFn: () => void) => {
-              adTriggeredRef.current = true;
-              setIsAdLoading(false);
-              showAdFn();
-            },
-            adDismissed: () => {
-              adTriggeredRef.current = true;
-              setIsAdBlockerActive(true);
-              setIsAdLoading(false);
-            },
-            adViewed: () => {
-              adTriggeredRef.current = true;
-              onComplete();
-            },
-            adBreakDone: (placementInfo: any) => {
-              adTriggeredRef.current = true;
-              console.log('AdBreak info:', placementInfo);
-              // If ad wasn't viewed (blocked, no fill, etc)
-              if (placementInfo.breakStatus !== 'adViewed') {
-                setIsAdBlockerActive(true);
-                setIsAdLoading(false);
-              }
-            }
-          });
-        } catch (e) {
-          console.error("AdSense execution error:", e);
-          setIsAdBlockerActive(true);
-          setIsAdLoading(false);
-        }
-      } else {
-        // adBreak not found (AdBlocker likely)
-        setIsAdBlockerActive(true);
-        setIsAdLoading(false);
-      }
-    };
-
-    // Small delay to ensure SDK is initialized and DOM is ready
-    const timer = setTimeout(triggerAd, 2500);
-    
-    return () => {
-      clearTimeout(timer);
-      clearTimeout(safetyTimeout);
-    };
-  }, [onComplete]);
-
-  useEffect(() => {
-    if (isAdBlockerActive && timeLeft > 0) {
-      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-      return () => clearTimeout(timer);
-    } else if (isAdBlockerActive && timeLeft === 0) {
-      setIsFinished(true);
-    }
-  }, [timeLeft, isAdBlockerActive]);
+    return () => clearTimeout(timer);
+  }, []);
 
   const t = language === 'si' ? {
     title: "විශ්වීය අනුග්‍රහය",
-    subtitle: isAdLoading ? "විශ්වීය සංඥා සම්බන්ධ කරමින්..." : "ඔබේ අනාවැකිය සක්‍රීය කිරීමට කෙටි මොහොතක් රැඳී සිටින්න...",
+    subtitle: isAdLoading ? "විශ්වීය සංඥා සම්බන්ධ කරමින්..." : "ඔබේ අනාවැකිය සක්‍රීය කිරීමට සූදානම්...",
     btn: "අනාවැකිය විවෘත කරන්න",
     close: "පසුව බලමු"
   } : {
     title: "Celestial Sponsorship",
-    subtitle: isAdLoading ? "Connecting to celestial signals..." : "Watch this short ritual to unlock your cosmic insight...",
+    subtitle: isAdLoading ? "Connecting to celestial signals..." : "The stars have aligned. Unlock your cosmic insight now.",
     btn: "Reveal My Destiny",
     close: "Maybe later"
   };
@@ -120,26 +54,16 @@ const AdOverlay: React.FC<AdOverlayProps> = ({ onComplete, onClose, language }) 
           {isAdLoading ? (
             <div className="flex flex-col items-center space-y-4 py-4">
               <div className="w-8 h-8 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin"></div>
-              <span className="text-[10px] text-white/20 uppercase tracking-widest animate-pulse">Waiting for Stars...</span>
+              <span className="text-[10px] text-white/20 uppercase tracking-widest animate-pulse">Synchronizing...</span>
             </div>
-          ) : isAdBlockerActive && !isFinished ? (
-            <div className="space-y-4">
-              <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-purple-600 to-blue-600 transition-all duration-1000 ease-linear"
-                  style={{ width: `${((5 - timeLeft) / 5) * 100}%` }}
-                ></div>
-              </div>
-              <div className="text-4xl font-light text-white/20 tabular-nums">0:0{timeLeft}</div>
-            </div>
-          ) : isFinished ? (
+          ) : (
             <button 
               onClick={onComplete}
               className="w-full bg-gradient-to-r from-purple-600 to-blue-600 py-5 rounded-2xl font-bold uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-white animate-fade-in"
             >
               {t.btn}
             </button>
-          ) : null}
+          )}
         </div>
 
         <button 

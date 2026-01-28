@@ -14,6 +14,7 @@ import ZodiacHome from './components/ZodiacHome.tsx';
 import SignPrediction from './components/SignPrediction.tsx';
 import Disclaimer from './components/Disclaimer.tsx';
 import AdOverlay from './components/AdOverlay.tsx';
+import AdBanner from './components/AdBanner.tsx';
 
 const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -33,9 +34,8 @@ const App: React.FC = () => {
     return !process.env.API_KEY && !(import.meta as any).env?.VITE_API_KEY;
   });
   
-  const [currentLanguage, setCurrentLanguage] = useState<Language>(() => {
-    return (localStorage.getItem('cosmic_oracle_lang') as Language) || 'en';
-  });
+  // Default language set to English
+  const [currentLanguage, setCurrentLanguage] = useState<Language>('en');
 
   const [hasConsented, setHasConsented] = useState<boolean>(() => {
     return localStorage.getItem('cosmic_oracle_consent') === 'true';
@@ -158,7 +158,6 @@ const App: React.FC = () => {
 
   const toggleLanguage = (lang: Language) => {
     setCurrentLanguage(lang);
-    localStorage.setItem('cosmic_oracle_lang', lang);
   };
 
   const handleAcceptConsent = () => {
@@ -169,6 +168,8 @@ const App: React.FC = () => {
   const isZodiacMode = view === 'HOME' || view === 'SIGN_DETAIL';
   const isPersonalizedMode = view === 'FORM' || view === 'RESULT';
   const isMatchMode = view === 'MATCH_FORM' || view === 'MATCH_RESULT';
+
+  const showSidebar = view === 'RESULT' || view === 'MATCH_RESULT' || view === 'SIGN_DETAIL';
 
   const navButtons = [
     { 
@@ -256,7 +257,7 @@ const App: React.FC = () => {
 
       {/* Main Layout Wrapper: Flex container for Content + Sidebar */}
       <div className="w-full max-w-[1500px] flex flex-col lg:flex-row gap-8 items-start">
-        <main className="flex-grow w-full max-w-5xl relative">
+        <main className={`flex-grow w-full relative ${showSidebar ? 'max-w-5xl' : ''}`}>
           {loading && <div className="fixed inset-0 z-[100] bg-[#0a0a1a]/80 backdrop-blur-lg flex items-center justify-center"><Loader language={currentLanguage} /></div>}
 
           {error && (
@@ -325,18 +326,24 @@ const App: React.FC = () => {
               <Disclaimer language={currentLanguage} />
             </div>
           )}
+
+          {/* AdSense Banner Logic - Displayed only on Result pages */}
+          {showSidebar && <AdBanner />}
+
         </main>
 
-        {/* Sidebar for Advertisements (Desktop sticky, Mobile bottom) */}
-        <aside className="w-full lg:w-96 shrink-0 lg:sticky lg:top-8 space-y-6">
-          <div className="glass rounded-[2rem] border border-white/10 p-6 min-h-[400px] lg:min-h-[600px] flex flex-col items-center justify-start text-white uppercase tracking-[0.4em] font-bold text-xs">
-            <div className="mb-6 opacity-60 text-center w-full">
-              {currentLanguage === 'si' ? 'විශ්වීය අනුග්‍රහය' : 'Celestial Sponsorship'}
+        {/* Sidebar for Advertisements (Desktop sticky, Mobile bottom) - Only shown on result pages */}
+        {showSidebar && (
+          <aside className="w-full lg:w-96 shrink-0 lg:sticky lg:top-8 space-y-6 animate-fade-in">
+            <div className="glass rounded-[2rem] border border-white/10 p-6 min-h-[400px] lg:min-h-[600px] flex flex-col items-center justify-start text-white uppercase tracking-[0.4em] font-bold text-xs">
+              <div className="mb-6 opacity-60 text-center w-full">
+                {currentLanguage === 'si' ? 'විශ්වීය අනුග්‍රහය' : 'Celestial Sponsorship'}
+              </div>
+              {/* Target container for the ad network script in index.html */}
+              <div id="container-184feb0cd95bdf3d09c7ab46b417e225" className="w-full"></div>
             </div>
-            {/* Target container for the ad network script in index.html */}
-            <div id="container-184feb0cd95bdf3d09c7ab46b417e225" className="w-full"></div>
-          </div>
-        </aside>
+          </aside>
+        )}
       </div>
 
       <footer className="mt-auto py-8 text-white/30 text-xs uppercase tracking-[0.4em] text-center w-full border-t border-white/5">
