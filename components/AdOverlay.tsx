@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Language } from '../types.ts';
 
 interface AdOverlayProps {
@@ -9,26 +9,14 @@ interface AdOverlayProps {
 }
 
 const AdOverlay: React.FC<AdOverlayProps> = ({ onComplete, onClose, language }) => {
-  const [isAdLoading, setIsAdLoading] = useState(true);
-
-  useEffect(() => {
-    // Simulate a "Ritual" delay instead of an actual AdSense Video call
-    // This maintains the "Celestial Sponsorship" experience requested without the rewarded ad format.
-    const timer = setTimeout(() => {
-      setIsAdLoading(false);
-    }, 4000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
   const t = language === 'si' ? {
     title: "විශ්වීය අනුග්‍රහය",
-    subtitle: isAdLoading ? "විශ්වීය සංඥා සම්බන්ධ කරමින්..." : "ඔබේ අනාවැකිය සක්‍රීය කිරීමට සූදානම්...",
+    subtitle: "ඔබේ අනාවැකිය සක්‍රීය කිරීමට සූදානම්...",
     btn: "අනාවැකිය විවෘත කරන්න",
     close: "පසුව බලමු"
   } : {
     title: "Celestial Sponsorship",
-    subtitle: isAdLoading ? "Connecting to celestial signals..." : "The stars have aligned. Unlock your cosmic insight now.",
+    subtitle: "The stars have aligned. Unlock your cosmic insight now.",
     btn: "Reveal My Destiny",
     close: "Maybe later"
   };
@@ -51,19 +39,12 @@ const AdOverlay: React.FC<AdOverlayProps> = ({ onComplete, onClose, language }) 
         </div>
 
         <div className="relative pt-4 z-10">
-          {isAdLoading ? (
-            <div className="flex flex-col items-center space-y-4 py-4">
-              <div className="w-8 h-8 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin"></div>
-              <span className="text-[10px] text-white/20 uppercase tracking-widest animate-pulse">Synchronizing...</span>
-            </div>
-          ) : (
-            <button 
-              onClick={onComplete}
-              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 py-5 rounded-2xl font-bold uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-white animate-fade-in"
-            >
-              {t.btn}
-            </button>
-          )}
+          <button 
+            onClick={onComplete}
+            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 py-5 rounded-2xl font-bold uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-white animate-fade-in"
+          >
+            {t.btn}
+          </button>
         </div>
 
         <button 
