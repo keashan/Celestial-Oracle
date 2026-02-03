@@ -16,66 +16,46 @@ const PredictionDisplay: React.FC<PredictionDisplayProps> = ({ prediction, userN
   const analysisHeader = language === 'si' ? "ඔබේ දෛවයේ ගැඹුරු විශ්ලේෂණය" : "Your Deep-Dive Analysis";
   const monthlyHeader = language === 'si' ? "මාසික මඟපෙන්වීම" : "Monthly Cosmic Guidance";
 
-  const signInfo = ZODIAC_SIGNS.find(s => s.symbol === prediction.symbol);
+  // Use local source of truth for symbols and names to avoid AI noise/labels
+  const signInfo = ZODIAC_SIGNS.find(s => 
+    prediction.zodiacSign.toLowerCase().includes(s.en.toLowerCase()) ||
+    prediction.zodiacSign.toLowerCase().includes(s.id)
+  );
+
   const signNameDisplay = signInfo 
-    ? `${signInfo.si} (${signInfo.en})`
+    ? `${signInfo.en} (${signInfo.si})`
     : prediction.zodiacSign;
+    
+  const signSymbol = signInfo ? signInfo.symbol : '✨';
 
   return (
-    <div className="space-y-8">
-      {/* Hero Section with Image focus */}
-      <div className="glass p-8 md:p-12 rounded-[3.5rem] relative overflow-hidden border border-white/10 shadow-2xl flex flex-col md:flex-row items-center gap-10">
-        {/* Background Image Watermark */}
-        {prediction.imageUrl && (
-          <div className="absolute inset-0 opacity-[0.15] pointer-events-none select-none blur-2xl">
-            <img src={prediction.imageUrl} alt="" className="w-full h-full object-cover" />
+    <div className="space-y-12">
+      {/* Symbolic Header Section - Clean & Text-Free Icon */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-4">
+        <div className="text-left space-y-2">
+          <div className="text-white/40 uppercase tracking-[0.4em] text-[10px] md:text-xs font-bold">
+            {intro}
           </div>
-        )}
-        
-        {/* Main Generated Artwork */}
-        <div className="relative shrink-0 z-10">
-          <div className="absolute inset-0 bg-purple-500/30 blur-[40px] rounded-full animate-pulse"></div>
-          <div className="relative w-40 h-40 md:w-56 md:h-56 rounded-[3rem] overflow-hidden border-2 border-white/20 shadow-[0_0_50px_rgba(168,85,247,0.4)] transform hover:scale-[1.02] transition-transform duration-700">
-            {prediction.imageUrl ? (
-              <img src={prediction.imageUrl} alt={prediction.zodiacSign} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-purple-900 to-black flex items-center justify-center text-7xl">
-                {prediction.symbol}
-              </div>
-            )}
-          </div>
+          <h2 className="text-5xl md:text-7xl font-bold text-white tracking-tighter italic font-serif leading-none">
+            {userName}
+          </h2>
         </div>
-        
-        <div className="relative z-10 text-center md:text-left space-y-4 flex-grow">
-          <div className="space-y-1">
-            <div className="text-white/40 uppercase tracking-[0.4em] text-[10px] md:text-xs font-bold">{intro}</div>
-            <h2 className="text-5xl md:text-7xl font-bold text-white tracking-tighter leading-none italic font-serif">
-              {userName}
-            </h2>
-          </div>
 
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
-            <div className="glass px-6 py-3 rounded-2xl border border-purple-500/20 shadow-xl flex items-center">
-              <span className="text-purple-400 font-bold text-xl md:text-2xl font-serif">
-                {signNameDisplay}
-              </span>
-            </div>
-            
-            <div className="hidden md:flex items-center space-x-2 text-white/20">
-              <div className="h-[1px] w-12 bg-white/10"></div>
-              <span className="text-[10px] uppercase tracking-[0.3em]">Celestial Identity</span>
-            </div>
+        <div className="flex items-center space-x-4 bg-white/5 px-6 py-3 rounded-2xl border border-white/10 self-start md:self-end shadow-xl">
+          <span className="text-2xl md:text-3xl font-bold text-white tracking-tight">{signNameDisplay}</span>
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(124,58,237,0.4)] border border-white/20">
+            {signSymbol}
           </div>
         </div>
       </div>
 
       {/* Main Analysis Section */}
       <div className="glass p-10 md:p-16 rounded-[4rem] border border-purple-500/10 bg-purple-500/5 shadow-[0_0_80px_rgba(168,85,247,0.1)] relative">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-8 py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full text-xs font-bold uppercase tracking-[0.4em] shadow-2xl">
+        <div className="absolute top-0 left-12 -translate-y-1/2 px-8 py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full text-xs font-bold uppercase tracking-[0.4em] shadow-2xl">
           {analysisHeader}
         </div>
         
-        <div className="relative z-10">
+        <div className="relative z-10 pt-4">
           <div className="prose prose-invert max-w-none">
             <p className="text-white/90 text-lg md:text-xl leading-[1.8] font-light whitespace-pre-line text-justify md:text-left selection:bg-purple-500/30">
               {prediction.prediction}

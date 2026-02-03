@@ -18,12 +18,12 @@ const Loader: React.FC<LoaderProps> = ({ language }) => {
 
   const messages = language === 'si' ? [
     { title: "ග්‍රහලෝක පෙළගස්වමින්...", subtitle: "ඔබේ සුවිශේෂී විශ්වීය කම්පනය ගණනය කරමින්..." },
-    { title: "දෛවයේ පින්තූරය අඳිමින්...", subtitle: "ඔබේ ලග්නයට අදාළ දිව්‍යමය සිතුවම නිර්මාණය කරමින්..." },
+    { title: "දෛවයේ සිතියම සකසමින්...", subtitle: "ඔබේ ජන්ම පත්‍රය පිළිබඳ ගැඹුරු විශ්ලේෂණයක් සිදු කරමින්..." },
     { title: "තරු මගින් පණිවිඩ එවමින්...", subtitle: "අනාවැකියේ අවසන් තොරතුරු සකසමින්..." }
   ] : [
     { title: "Aligning the Planets", subtitle: "Calculating your unique celestial vibration..." },
-    { title: "Painting Your Portrait", subtitle: "Generating a unique mystical artwork for your sign..." },
-    { title: "Receiving Stellar Signals", subtitle: "Finalizing your deep-dive astrological analysis..." }
+    { title: "Mapping Your Destiny", subtitle: "Performing a deep analysis of your birth chart..." },
+    { title: "Receiving Stellar Signals", subtitle: "Finalizing your personalized astrological report..." }
   ];
 
   const content = messages[step];

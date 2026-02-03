@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { SignCategoryPrediction, Language } from '../types.ts';
+import { SignCategoryPrediction, Language, ZODIAC_SIGNS } from '../types.ts';
 import Disclaimer from './Disclaimer.tsx';
 
 interface SignPredictionProps {
@@ -34,9 +34,20 @@ const SignPrediction: React.FC<SignPredictionProps> = ({ prediction, language, o
     backBtn: "Return to Signs"
   };
 
+  const signInfo = ZODIAC_SIGNS.find(s => 
+    prediction.sign.toLowerCase().includes(s.en.toLowerCase()) || 
+    prediction.sign.toLowerCase().includes(s.id)
+  );
+
+  const signNameDisplay = signInfo 
+    ? `${signInfo.en} (${signInfo.si})` 
+    : prediction.sign;
+    
+  const signSymbol = signInfo ? signInfo.symbol : '✨';
+
   return (
     <div className="space-y-12 pb-20">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-4">
         <button 
           onClick={onBack}
           className="flex items-center space-x-2 text-white/50 hover:text-white transition-colors group self-start"
@@ -51,9 +62,11 @@ const SignPrediction: React.FC<SignPredictionProps> = ({ prediction, language, o
           <div className="text-white/40 uppercase tracking-[0.4em] text-[10px] md:text-xs font-bold">
             {t.predictionHeader}
           </div>
-          <div className="text-2xl md:text-4xl font-bold flex items-center md:justify-end space-x-4">
-            <span>{prediction.sign}</span>
-            <span className="opacity-50 filter drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">{prediction.symbol}</span>
+          <div className="flex items-center md:justify-end space-x-4">
+            <span className="text-3xl md:text-5xl font-bold text-white tracking-tight">{signNameDisplay}</span>
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(124,58,237,0.4)] border border-white/20">
+              {signSymbol}
+            </div>
           </div>
         </div>
       </div>

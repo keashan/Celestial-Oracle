@@ -47,20 +47,19 @@ export async function getAllSignPredictions(language: Language): Promise<Record<
 
   const prompt = `
     Provide a professional astrological outlook for ALL 12 zodiac signs for the next 12 months.
-    Signs: Aries, Taurus, Gemini, Cancer, Leo, Virgo, Libra, Scorpio, Sagittarius, Capricorn, Aquarius, Pisces.
     
-    CRITICAL: Use the VEDIC (SIDEREAL/NIRAYANA) astrological framework for these predictions.
+    CRITICAL: Use the VEDIC (SIDEREAL/NIRAYANA) astrological framework.
     
     ${langInstruction}
     
     CONTENT DEPTH GUIDELINES:
-    1. 'general' (General Path): Provide an EXTENSIVE analysis (8-10 insightful sentences).
-    2. 'love', 'money', 'career', 'education', 'health': Provide a meaningful summary of 3 to 4 insightful sentences each.
+    1. 'general': Extensive analysis (8-10 sentences).
+    2. 'love', 'money', 'career', 'education', 'health': Meaningful summary (3-4 sentences).
     
     Return a JSON object where each key is the lowercase sign ID (e.g. "aries") and the value contains:
     1. Sign name
-    2. Symbol (emoji)
-    3. Insights for the categories.
+    2. Symbol (emoji only)
+    3. Insights for categories.
   `;
 
   const response = await ai.models.generateContent({
@@ -117,9 +116,7 @@ export async function getHoroscopeMatch(details: MatchDetails, language: Languag
 
   const prompt = `
     Astrological compatibility based on VEDIC (SIDEREAL) astrology (Koota matching principle) for:
-    P1: ${details.person1.name}, Born: ${details.person1.birthDate} @ ${details.person1.birthTime} in ${details.person1.birthLocation}.
-    P2: ${details.person2.name}, Born: ${details.person2.birthDate} @ ${details.person2.birthTime} in ${details.person2.birthLocation}.
-    
+    P1: ${details.person1.name}, P2: ${details.person2.name}.
     ${langInstruction}
   `;
 
@@ -170,30 +167,21 @@ export async function getAstrologyPrediction(details: UserDetails): Promise<Pred
     ? "IMPORTANT: All output text MUST be strictly in Sinhala language (සිංහල)." 
     : "All output text MUST be in English.";
 
-  // UPDATED PROMPT: Explicitly forcing the calculation to be based on the Vedic (Sidereal) system.
-  // This ensures that signs are calculated using Lahiri or Raman Ayanamsa (shifting approx 23-24 degrees back from Tropical).
   const prompt = `
     Master Astrologer: Provide a comprehensive 12-month birth chart reading.
+    Calculate the Zodiac sign using the VEDIC (SIDEREAL/NIRAYANA) system.
     
-    CRITICAL INSTRUCTION: Calculate the Zodiac sign and house positions using the VEDIC (SIDEREAL/NIRAYANA) system. 
-    Do NOT use the Western Tropical zodiac. 
-    Ensure consistency across all languages. The sign must be calculated by applying the Ayanamsa correction (shifting back from Tropical dates).
-    
-    User Details:
-    Name: ${details.name}
-    Born: ${details.birthDate} at ${details.birthTime} in ${details.birthLocation}, ${details.birthState}, ${details.birthCountry}.
-    Context: ${details.additionalContext || "General spiritual growth"}.
-    Start Date for Forecast: ${currentMonthName} ${currentYear}.
+    User: ${details.name}, Born: ${details.birthDate} at ${details.birthTime} in ${details.birthLocation}.
+    Start Date: ${currentMonthName} ${currentYear}.
     
     ${langInstruction}
     
     REQUIREMENTS:
-    - 'zodiacSign': The Sun Sign (Rashi) according to SIDEREAL calculation.
-    - 'prediction': Long-form analysis (approx 400-500 words). Cover Career, Inner Life, Karma, and Relationships in distinct paragraphs using \\n.
-    - 'monthlyBreakdown': 12 months with substantial (3-4 sentence) highlights each.
+    - 'zodiacSign': The Sun Sign (Rashi) in English.
+    - 'prediction': Long-form analysis (approx 400 words).
+    - 'monthlyBreakdown': 12 months with highlights.
   `;
 
-  // 1. Generate Text Prediction
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: prompt,
@@ -225,34 +213,7 @@ export async function getAstrologyPrediction(details: UserDetails): Promise<Pred
 
   const text = response.text;
   if (!text) throw new Error('Oracle returned an empty signal.');
-  const predictionData = JSON.parse(text) as PredictionData;
-
-  // 2. Generate Image Artwork for the Zodiac Sign
-  try {
-    const imagePrompt = `A high-end, ethereal, mystical artistic digital painting of the zodiac sign ${predictionData.zodiacSign}. The artwork should be abstract, cinematic, featuring glowing celestial colors like deep violet, gold, and indigo. Cosmic dust, stars, and a subtle silhouette of the ${predictionData.zodiacSign} symbol. High resolution, professional digital art style. No text in the image.`;
-    
-    const imageResponse = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image',
-      contents: [{ text: imagePrompt }],
-      config: {
-        imageConfig: {
-          aspectRatio: "1:1"
-        }
-      }
-    });
-
-    for (const part of imageResponse.candidates[0].content.parts) {
-      if (part.inlineData) {
-        predictionData.imageUrl = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
-        break;
-      }
-    }
-  } catch (err) {
-    console.error("Failed to generate celestial artwork:", err);
-    // Fallback happens in the UI if imageUrl is missing
-  }
-
-  return predictionData;
+  return JSON.parse(text) as PredictionData;
 }
 
 /**
@@ -268,7 +229,7 @@ export async function sendChatMessage(
   const apiKey = getApiKey();
   const ai = new GoogleGenAI({ apiKey });
   
-  const systemInstruction = `You are the Cosmic Oracle for ${userDetails.name}. Respond in ${currentLanguage === 'si' ? 'Sinhala' : 'English'}. Tone: Mystical. You operate exclusively using VEDIC (SIDEREAL) astrology. Context: ${prediction.prediction}.`;
+  const systemInstruction = `You are the Cosmic Oracle for ${userDetails.name}. Respond in ${currentLanguage === 'si' ? 'Sinhala' : 'English'}. Vedic context: ${prediction.prediction}.`;
 
   const chat = ai.chats.create({
     model: 'gemini-3-flash-preview',
@@ -280,5 +241,5 @@ export async function sendChatMessage(
   });
 
   const response = await chat.sendMessage({ message });
-  return response.text || (currentLanguage === 'si' ? "තරු නිහඬ වී ඇත." : "The stars are silent.");
+  return response.text || "The stars are silent.";
 }

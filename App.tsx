@@ -30,9 +30,7 @@ const App: React.FC = () => {
   const [adOverlayActive, setAdOverlayActive] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => Promise<void>) | null>(null);
   
-  const [needsApiKey, setNeedsApiKey] = useState(() => {
-    return !process.env.API_KEY && !(import.meta as any).env?.VITE_API_KEY;
-  });
+  const [needsApiKey, setNeedsApiKey] = useState(false);
   
   // Default language set to English
   const [currentLanguage, setCurrentLanguage] = useState<Language>('en');
@@ -54,6 +52,7 @@ const App: React.FC = () => {
           const hasKey = await aistudio.hasSelectedApiKey();
           setNeedsApiKey(!hasKey);
         } else {
+          // If bridge is not available and no env key, we can't do much but we'll show the state
           setNeedsApiKey(true);
         }
       } else {
@@ -62,6 +61,15 @@ const App: React.FC = () => {
     };
     checkKeyStatus();
   }, []);
+
+  const handleConnectKey = async () => {
+    const aistudio = (window as any).aistudio;
+    if (aistudio && typeof aistudio.openSelectKey === 'function') {
+      await aistudio.openSelectKey();
+      setNeedsApiKey(false); // Assume success per race condition handling guidelines
+      window.location.reload(); // Reload to re-initialize environment
+    }
+  };
 
   const executeFormSubmit = async (details: UserDetails) => {
     if (loading) return; 
@@ -73,7 +81,11 @@ const App: React.FC = () => {
       setPrediction(data);
       setView('RESULT');
     } catch (err: any) {
-      setError(currentLanguage === 'si' ? "දත්ත ලබා ගැනීමට නොහැකි විය." : "Failed to fetch celestial data.");
+      console.error(err);
+      if (err.message?.includes("Requested entity was not found")) {
+        setNeedsApiKey(true);
+      }
+      setError(currentLanguage === 'si' ? "දත්ත ලබා ගැනීමට නොහැකි විය." : "Failed to fetch celestial data. Please ensure your API key is connected.");
     } finally {
       setLoading(false);
     }
@@ -89,6 +101,7 @@ const App: React.FC = () => {
       setMatchPrediction(data);
       setView('MATCH_RESULT');
     } catch (err: any) {
+      console.error(err);
       setError(currentLanguage === 'si' ? "ගැළපීම් සිදු කිරීමට නොහැකි විය." : "Failed to perform matching ritual.");
     } finally {
       setLoading(false);
@@ -117,6 +130,7 @@ const App: React.FC = () => {
         throw new Error("Sign data missing.");
       }
     } catch (err: any) {
+      console.error(err);
       setError(currentLanguage === 'si' ? "දත්ත ලබා ගැනීමට නොහැකි විය." : "Failed to fetch celestial data.");
     } finally {
       setLoading(false);
@@ -238,6 +252,33 @@ const App: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {needsApiKey && (
+        <div className="w-full max-w-2xl mb-12 animate-fade-in">
+          <div className="glass p-8 rounded-[2rem] border border-amber-500/20 bg-amber-500/5 text-center space-y-4">
+            <h3 className="text-xl font-bold text-amber-300 uppercase tracking-widest">Connect Celestial Source</h3>
+            <p className="text-white/60 text-sm leading-relaxed font-light">
+              To consult the Cosmic Oracle, you must connect a valid Gemini API key from a paid GCP project.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+              <button 
+                onClick={handleConnectKey}
+                className="px-8 py-4 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:brightness-110 text-white font-bold uppercase tracking-widest text-xs transition-all shadow-xl"
+              >
+                Select API Key
+              </button>
+              <a 
+                href="https://ai.google.dev/gemini-api/docs/billing" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-amber-400/60 hover:text-amber-400 text-[10px] uppercase tracking-widest underline underline-offset-4"
+              >
+                Billing Documentation
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
       
       {!hasConsented && (
         <ConsentModal 
@@ -290,7 +331,7 @@ const App: React.FC = () => {
             <AstroForm 
               onSubmit={handleFormSubmit} 
               currentLanguage={currentLanguage} 
-              disabled={loading}
+              disabled={loading || needsApiKey}
             />
           )}
 
@@ -298,7 +339,7 @@ const App: React.FC = () => {
             <MatchForm 
               onSubmit={handleMatchSubmit} 
               currentLanguage={currentLanguage} 
-              disabled={loading}
+              disabled={loading || needsApiKey}
             />
           )}
 

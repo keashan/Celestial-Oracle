@@ -24,7 +24,6 @@ export interface PredictionData {
   symbol: string;
   prediction: string;
   monthlyBreakdown: { month: string; highlight: string }[];
-  imageUrl?: string;
 }
 
 export interface MatchPrediction {
