@@ -37,24 +37,6 @@ const ConsentModal: React.FC<ConsentModalProps> = ({ onAccept, language, onLangu
         <div className="text-center space-y-3">
           <h2 className="text-[length:var(--fs-heading-main)] font-bold text-white tracking-widest uppercase">{t.title}</h2>
           
-          {/* Internal Language Toggle for the Modal */}
-          <div className="flex justify-center mt-4">
-            <div className="bg-white/5 p-1 rounded-xl border border-white/5 flex shadow-inner">
-              <button 
-                onClick={() => onLanguageChange('en')}
-                className={`px-5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${language === 'en' ? 'bg-purple-600 text-white shadow-lg' : 'text-white/30'}`}
-              >
-                English
-              </button>
-              <button 
-                onClick={() => onLanguageChange('si')}
-                className={`px-5 py-1.5 rounded-lg text-[10px] font-bold transition-all ${language === 'si' ? 'bg-purple-600 text-white shadow-lg' : 'text-white/30'}`}
-              >
-                සිංහල
-              </button>
-            </div>
-          </div>
-
           <p className="text-white/50 text-[length:var(--fs-body)] italic max-w-lg mx-auto leading-relaxed mt-4">{t.intro}</p>
         </div>
 

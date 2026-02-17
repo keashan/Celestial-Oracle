@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Language } from '../types.ts';
 
 interface AdOverlayProps {
@@ -9,6 +9,18 @@ interface AdOverlayProps {
 }
 
 const AdOverlay: React.FC<AdOverlayProps> = ({ onComplete, onClose, language }) => {
+  
+  // Listen for the click message from the iframe
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data === 'ad-clicked') {
+        onComplete();
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [onComplete]);
+
   const t = language === 'si' ? {
     title: "විශ්වීය අනුග්‍රහය",
     subtitle: "ඔබේ අනාවැකිය සක්‍රීය කිරීමට සූදානම්...",
@@ -20,6 +32,63 @@ const AdOverlay: React.FC<AdOverlayProps> = ({ onComplete, onClose, language }) 
     btn: "Reveal My Destiny",
     close: "Maybe later"
   };
+
+  // Construct the iframe content.
+  // We embed the ad script inside this isolated document.
+  // The button takes up the full space.
+  const iframeSrc = `
+    <!DOCTYPE html>
+    <html lang="${language}">
+      <head>
+        <meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+        <style>
+          body { 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            background: transparent; 
+            height: 100vh; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+          }
+          button {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: linear-gradient(to right, #9333ea, #2563eb);
+            color: white;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            cursor: pointer;
+            transition: opacity 0.2s;
+          }
+          button:hover {
+            opacity: 0.9;
+          }
+          button:active {
+            opacity: 0.95;
+          }
+        </style>
+        <!-- Ad Script Injected Here - Isolated to Iframe -->
+        <script src="https://anniversaryvacuumambassador.com/76/26/c8/7626c8accddf9d88bd96515b19c81840.js"></script>
+      </head>
+      <body>
+        <button id="actionBtn">${t.btn}</button>
+        <script>
+          const btn = document.getElementById('actionBtn');
+          btn.onclick = function() {
+            // Notify parent app
+            window.parent.postMessage('ad-clicked', '*');
+          };
+        </script>
+      </body>
+    </html>
+  `;
 
   return (
     <div className="fixed inset-0 z-[200] bg-[#0a0a1a]/95 backdrop-blur-2xl flex items-center justify-center p-6 animate-fade-in">
@@ -39,12 +108,21 @@ const AdOverlay: React.FC<AdOverlayProps> = ({ onComplete, onClose, language }) 
         </div>
 
         <div className="relative pt-4 z-10">
-          <button 
-            onClick={onComplete}
-            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 py-5 rounded-2xl font-bold uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-white animate-fade-in"
-          >
-            {t.btn}
-          </button>
+          {/* 
+            Iframe Container 
+            We use an iframe to contain the ad script so it doesn't pollute the main window.
+            The ad script inside the iframe will trigger a popunder (allowed by sandbox flags) 
+            only when the button inside the iframe is clicked.
+          */}
+          <div className="w-full h-16 rounded-2xl overflow-hidden shadow-xl hover:scale-[1.02] transition-transform relative bg-gradient-to-r from-purple-600 to-blue-600">
+            <iframe
+              srcDoc={iframeSrc}
+              title="Reveal Destiny Action"
+              className="w-full h-full border-0"
+              scrolling="no"
+              sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"
+            />
+          </div>
         </div>
 
         <button 

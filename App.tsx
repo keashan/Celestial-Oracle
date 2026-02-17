@@ -14,7 +14,6 @@ import ZodiacHome from './components/ZodiacHome.tsx';
 import SignPrediction from './components/SignPrediction.tsx';
 import Disclaimer from './components/Disclaimer.tsx';
 import AdOverlay from './components/AdOverlay.tsx';
-import AdBanner from './components/AdBanner.tsx';
 
 const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -27,13 +26,15 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   
   const [signCache, setSignCache] = useState<Partial<Record<Language, Record<string, SignCategoryPrediction>>>>({});
-  const [adOverlayActive, setAdOverlayActive] = useState(false);
-  const [pendingAction, setPendingAction] = useState<(() => Promise<void>) | null>(null);
   
   const [needsApiKey, setNeedsApiKey] = useState(false);
   
-  // Default language set to English
+  // Default language set to English, UI switching disabled
   const [currentLanguage, setCurrentLanguage] = useState<Language>('en');
+  
+  // Overlay State
+  const [adOverlayActive, setAdOverlayActive] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => Promise<void>) | null>(null);
 
   const [hasConsented, setHasConsented] = useState<boolean>(() => {
     return localStorage.getItem('cosmic_oracle_consent') === 'true';
@@ -154,7 +155,7 @@ const App: React.FC = () => {
 
   const handleAdComplete = () => {
     setAdOverlayActive(false);
-    if (pendingAction && !loading) {
+    if (pendingAction) {
       pendingAction();
       setPendingAction(null);
     }
@@ -183,7 +184,8 @@ const App: React.FC = () => {
   const isPersonalizedMode = view === 'FORM' || view === 'RESULT';
   const isMatchMode = view === 'MATCH_FORM' || view === 'MATCH_RESULT';
 
-  const showSidebar = view === 'RESULT' || view === 'MATCH_RESULT' || view === 'SIGN_DETAIL';
+  // Only show ads/sidebar if language is English AND we are in a result view
+  const showSidebar = currentLanguage === 'en' && (view === 'RESULT' || view === 'MATCH_RESULT' || view === 'SIGN_DETAIL');
 
   const navButtons = [
     { 
@@ -220,26 +222,9 @@ const App: React.FC = () => {
           <Header language={currentLanguage} />
         </div>
         
-        {/* Row 2: Global Language Toggle & Navigation Buttons */}
-        <div className="w-full flex flex-col md:flex-row justify-between items-center gap-6">
-          {/* Global Language Toggle */}
-          <div className="bg-white/5 p-1 rounded-2xl border border-white/5 flex shadow-inner shrink-0 relative z-[60]">
-            <button 
-              onClick={() => toggleLanguage('en')}
-              className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${currentLanguage === 'en' ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg' : 'text-white/30 hover:text-white/60'}`}
-            >
-              English
-            </button>
-            <button 
-              onClick={() => toggleLanguage('si')}
-              className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${currentLanguage === 'si' ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg' : 'text-white/30 hover:text-white/60'}`}
-            >
-              සිංහල
-            </button>
-          </div>
-
-          {/* Navigation Buttons (Right Aligned on Desktop) */}
-          <div className="flex flex-wrap justify-center md:justify-end gap-3 md:gap-4">
+        {/* Row 2: Navigation Buttons - Centered */}
+        <div className="w-full flex justify-center items-center gap-6">
+          <div className="flex flex-wrap justify-center gap-3 md:gap-4">
             {visibleButtons.map((btn) => (
               <button 
                 key={btn.id}
@@ -368,17 +353,14 @@ const App: React.FC = () => {
             </div>
           )}
 
-          {/* AdSense Banner Logic - Displayed only on Result pages */}
-          {showSidebar && <AdBanner />}
-
         </main>
 
-        {/* Sidebar for Advertisements (Desktop sticky, Mobile bottom) - Only shown on result pages */}
+        {/* Sidebar for Advertisements (Desktop sticky, Mobile bottom) - Only shown on result pages in English */}
         {showSidebar && (
           <aside className="w-full lg:w-96 shrink-0 lg:sticky lg:top-8 space-y-6 animate-fade-in">
             <div className="glass rounded-[2rem] border border-white/10 p-6 min-h-[400px] lg:min-h-[600px] flex flex-col items-center justify-start text-white uppercase tracking-[0.4em] font-bold text-xs">
               <div className="mb-6 opacity-60 text-center w-full">
-                {currentLanguage === 'si' ? 'විශ්වීය අනුග්‍රහය' : 'Celestial Sponsorship'}
+                Celestial Sponsorship
               </div>
               {/* Target container for the ad network script in index.html */}
               <div id="container-184feb0cd95bdf3d09c7ab46b417e225" className="w-full"></div>
