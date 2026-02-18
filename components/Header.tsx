@@ -16,7 +16,6 @@ const Header: React.FC<HeaderProps> = ({ language }) => {
         {/* Subtle background glow for the logo */}
         <div className="absolute inset-0 bg-purple-500/20 blur-2xl rounded-full group-hover:bg-purple-500/30 transition-all duration-700"></div>
         
-        {/* Logo Image */}
         <img 
           src="/logo.png" 
           alt="Cosmic Oracle" 
