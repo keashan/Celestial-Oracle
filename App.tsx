@@ -14,10 +14,13 @@ import ZodiacHome from './components/ZodiacHome.tsx';
 import SignPrediction from './components/SignPrediction.tsx';
 import Disclaimer from './components/Disclaimer.tsx';
 import AdOverlay from './components/AdOverlay.tsx';
+import DailyDestiny from './components/DailyDestiny.tsx';
+import Sidebar from './components/Sidebar.tsx';
 
 const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
-  const [view, setView] = useState<AppView>('HOME');
+  // Default to DAILY view as requested
+  const [view, setView] = useState<AppView>('DAILY');
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [matchDetails, setMatchDetails] = useState<MatchDetails | null>(null);
   const [prediction, setPrediction] = useState<PredictionData | null>(null);
@@ -29,7 +32,6 @@ const App: React.FC = () => {
   
   const [needsApiKey, setNeedsApiKey] = useState(false);
   
-  // Default language set to English, UI switching disabled
   const [currentLanguage, setCurrentLanguage] = useState<Language>('en');
   
   // Overlay State
@@ -110,6 +112,7 @@ const App: React.FC = () => {
   };
 
   const executeSignSelect = async (signId: string) => {
+    // Check local memory cache first, then service (which checks Firestore)
     const currentLangCache = signCache[currentLanguage];
     if (currentLangCache && currentLangCache[signId]) {
       setSignDetail(currentLangCache[signId]);
@@ -162,7 +165,7 @@ const App: React.FC = () => {
   };
 
   const handleReset = () => {
-    setView('HOME');
+    setView('DAILY');
     setUserDetails(null);
     setPrediction(null);
     setSignDetail(null);
@@ -183,15 +186,23 @@ const App: React.FC = () => {
   const isZodiacMode = view === 'HOME' || view === 'SIGN_DETAIL';
   const isPersonalizedMode = view === 'FORM' || view === 'RESULT';
   const isMatchMode = view === 'MATCH_FORM' || view === 'MATCH_RESULT';
+  const isDailyMode = view === 'DAILY';
 
-  // Only show ads/sidebar if language is English AND we are in a result view
-  const showSidebar = currentLanguage === 'en' && (view === 'RESULT' || view === 'MATCH_RESULT' || view === 'SIGN_DETAIL');
+  // Show ads/sidebar on ALL views as requested (including HOME, FORMS, etc.)
+  const showSidebar = true;
 
   const navButtons = [
     { 
+      id: 'daily', 
+      label: currentLanguage === 'si' ? 'අද දවසේ දෛවය' : 'Today\'s Destiny', 
+      action: () => setView('DAILY'),
+      gradient: 'from-amber-600 to-orange-600',
+      active: isDailyMode
+    },
+    { 
       id: 'zodiac', 
-      label: currentLanguage === 'si' ? 'ලග්න පලාපල' : 'Zodiac Signs', 
-      action: handleReset,
+      label: currentLanguage === 'si' ? 'ලග්න පලාපල (වාර්ෂික)' : 'Zodiac (Yearly)', 
+      action: () => setView('HOME'),
       gradient: 'from-purple-600 to-indigo-600',
       active: isZodiacMode
     },
@@ -204,7 +215,7 @@ const App: React.FC = () => {
     },
     { 
       id: 'match', 
-      label: currentLanguage === 'si' ? 'පොරොන්දම් බැලීම' : 'Horoscope Match', 
+      label: currentLanguage === 'si' ? 'පොරොන්දම් බැලීම' : 'Match', 
       action: () => setView('MATCH_FORM'),
       gradient: 'from-pink-600 to-rose-600',
       active: isMatchMode
@@ -214,9 +225,19 @@ const App: React.FC = () => {
   const visibleButtons = navButtons.filter(btn => !btn.active);
   
   return (
-    <div className="min-h-screen flex flex-col items-center p-6 md:p-8 overflow-x-hidden text-white">
+    <div className="min-h-screen flex flex-col items-center p-6 md:p-8 overflow-x-hidden text-white relative">
+      {/* Language Toggle - Absolute Top Left */}
+      <div className="absolute top-4 left-4 z-50">
+        <button
+          onClick={() => toggleLanguage(currentLanguage === 'en' ? 'si' : 'en')}
+          className="glass px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-white/10 transition-colors border border-white/20"
+        >
+          {currentLanguage === 'en' ? 'සිංහල' : 'English'}
+        </button>
+      </div>
+
       {/* Header Container: Centered Header and Navigation Row */}
-      <div className="w-full max-w-[1500px] flex flex-col mb-12 gap-8">
+      <div className="w-full max-w-[1500px] flex flex-col mb-12 gap-8 mt-6">
         {/* Row 1: Brand/Header (Centered) */}
         <div className="w-full flex justify-center cursor-pointer" onClick={handleReset}>
           <Header language={currentLanguage} />
@@ -301,12 +322,16 @@ const App: React.FC = () => {
             />
           )}
 
+          {view === 'DAILY' && (
+             <DailyDestiny language={currentLanguage} />
+          )}
+
           {view === 'SIGN_DETAIL' && signDetail && (
             <div className="animate-fade-in space-y-8">
               <SignPrediction 
                 prediction={signDetail} 
                 language={currentLanguage} 
-                onBack={handleReset} 
+                onBack={() => setView('HOME')} 
                 onGoToForm={() => setView('FORM')}
               />
             </div>
@@ -355,15 +380,15 @@ const App: React.FC = () => {
 
         </main>
 
-        {/* Sidebar for Advertisements (Desktop sticky, Mobile bottom) - Only shown on result pages in English */}
+        {/* Sidebar for Advertisements (Desktop sticky, Mobile bottom) - Shown on all pages */}
         {showSidebar && (
           <aside className="w-full lg:w-96 shrink-0 lg:sticky lg:top-8 space-y-6 animate-fade-in">
             <div className="glass rounded-[2rem] border border-white/10 p-6 min-h-[400px] lg:min-h-[600px] flex flex-col items-center justify-start text-white uppercase tracking-[0.4em] font-bold text-xs">
               <div className="mb-6 opacity-60 text-center w-full">
-                Celestial Sponsorship
+                {currentLanguage === 'si' ? 'විශ්වීය අනුග්‍රහය' : 'Celestial Sponsorship'}
               </div>
-              {/* Target container for the ad network script in index.html */}
-              <div id="container-184feb0cd95bdf3d09c7ab46b417e225" className="w-full"></div>
+              {/* Universal Sidebar - Persists across navigation */}
+              <Sidebar />
             </div>
           </aside>
         )}

@@ -1,6 +1,8 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { UserDetails, PredictionData, Language, Message, SignCategoryPrediction, MatchDetails, MatchPrediction } from "../types.ts";
+import { UserDetails, PredictionData, Language, Message, SignCategoryPrediction, MatchDetails, MatchPrediction, DailyPrediction } from "../types.ts";
+import { db } from "./firebase.ts";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 /**
  * Gets the API key from environment or bridge.
@@ -14,9 +16,31 @@ function getApiKey(): string {
 }
 
 /**
+ * Helper to get document ID for caching
+ */
+const getDocId = (prefix: string, lang: Language) => {
+  const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  return `${prefix}_${date}_${lang}`;
+};
+
+/**
  * Generates category-based predictions for ALL 12 zodiac signs.
+ * Uses Firebase Firestore Caching (One global call per day per language).
  */
 export async function getAllSignPredictions(language: Language): Promise<Record<string, SignCategoryPrediction>> {
+  const docId = getDocId('zodiac_yearly', language);
+  const docRef = doc(db, "predictions", docId);
+
+  try {
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      console.log("Using Firestore cached 12-month forecast");
+      return docSnap.data().data as Record<string, SignCategoryPrediction>;
+    }
+  } catch (e) {
+    console.warn("Firestore cache read failed, falling back to API", e);
+  }
+
   const apiKey = getApiKey();
   const ai = new GoogleGenAI({ apiKey });
 
@@ -100,6 +124,102 @@ export async function getAllSignPredictions(language: Language): Promise<Record<
     };
   });
   
+  try {
+    await setDoc(docRef, { data: results, timestamp: new Date() });
+  } catch (e) {
+    console.warn("Firestore cache save failed", e);
+  }
+
+  return results;
+}
+
+/**
+ * Generates Daily Predictions for ALL 12 Signs.
+ * Uses Firebase Firestore Caching (One global call per day per language).
+ */
+export async function getDailyPredictions(language: Language): Promise<Record<string, DailyPrediction>> {
+  const docId = getDocId('daily_destiny', language);
+  const docRef = doc(db, "predictions", docId);
+
+  try {
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      console.log("Using Firestore cached daily destiny");
+      return docSnap.data().data as Record<string, DailyPrediction>;
+    }
+  } catch (e) {
+    console.warn("Firestore cache read failed, falling back to API", e);
+  }
+
+  const apiKey = getApiKey();
+  const ai = new GoogleGenAI({ apiKey });
+
+  const dateStr = new Date().toLocaleDateString(language === 'si' ? 'si-LK' : 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+  const langInstruction = language === 'si' 
+    ? "IMPORTANT: All output text MUST be strictly in Sinhala language (සිංහල)." 
+    : "All output text MUST be in English.";
+
+  const dailySchema = {
+    type: Type.OBJECT,
+    properties: {
+      sign: { type: Type.STRING },
+      prediction: { type: Type.STRING },
+      luckyColor: { type: Type.STRING },
+      luckyNumber: { type: Type.STRING },
+      mood: { type: Type.STRING }
+    },
+    required: ["sign", "prediction", "luckyColor", "luckyNumber", "mood"]
+  };
+
+  const prompt = `
+    Generate a brief DAILY Horoscope for ALL 12 Zodiac signs for today: ${dateStr}.
+    Use Vedic principles.
+    ${langInstruction}
+    
+    For each sign provide:
+    - prediction: 2 sentences of guidance.
+    - luckyColor: A color name.
+    - luckyNumber: A single number.
+    - mood: One word describing the day's vibe.
+  `;
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+      thinkingConfig: { thinkingBudget: 0 },
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          predictions: {
+            type: Type.OBJECT,
+            properties: {
+              aries: dailySchema, taurus: dailySchema, gemini: dailySchema, cancer: dailySchema,
+              leo: dailySchema, virgo: dailySchema, libra: dailySchema, scorpio: dailySchema,
+              sagittarius: dailySchema, capricorn: dailySchema, aquarius: dailySchema, pisces: dailySchema
+            },
+            required: ["aries", "taurus", "gemini", "cancer", "leo", "virgo", "libra", "scorpio", "sagittarius", "capricorn", "aquarius", "pisces"]
+          }
+        },
+        required: ["predictions"]
+      }
+    }
+  });
+
+  const text = response.text;
+  if (!text) throw new Error('Daily ritual failed.');
+  const parsed = JSON.parse(text);
+
+  const results: Record<string, DailyPrediction> = parsed.predictions;
+  
+  try {
+    await setDoc(docRef, { data: results, timestamp: new Date() });
+  } catch (e) {
+    console.warn("Firestore cache save failed", e);
+  }
+
   return results;
 }
 

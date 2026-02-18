@@ -1,7 +1,7 @@
 
 export type Language = 'en' | 'si';
 
-export type AppView = 'HOME' | 'SIGN_DETAIL' | 'FORM' | 'RESULT' | 'MATCH_FORM' | 'MATCH_RESULT';
+export type AppView = 'HOME' | 'SIGN_DETAIL' | 'FORM' | 'RESULT' | 'MATCH_FORM' | 'MATCH_RESULT' | 'DAILY';
 
 export interface UserDetails {
   name: string;
@@ -49,6 +49,14 @@ export interface SignCategoryPrediction {
     education: string;
     health: string;
   };
+}
+
+export interface DailyPrediction {
+  sign: string;
+  prediction: string;
+  luckyColor: string;
+  luckyNumber: string;
+  mood: string;
 }
 
 export interface Message {
