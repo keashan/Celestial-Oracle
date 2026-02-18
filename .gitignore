@@ -124,3 +124,6 @@ dist
 # Vite
 dist-ssr
 *.local
+
+# Specific Assets
+logo.png
