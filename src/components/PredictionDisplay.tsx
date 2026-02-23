@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { PredictionData, Language, ZODIAC_SIGNS } from '../types.ts';
+import { PredictionData, Language, ZODIAC_SIGNS } from '../../types.ts';
 
 interface PredictionDisplayProps {
   prediction: PredictionData;

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { UserDetails, PredictionData, Message, Language } from '../types.ts';
-import { sendChatMessage } from '../services/geminiService.ts';
+import { UserDetails, PredictionData, Message, Language } from '../../types.ts';
+import { sendChatMessage } from '../../services/geminiService.ts';
 
 interface ChatInterfaceProps {
   userDetails: UserDetails;

@@ -1,0 +1,46 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+/* Custom styles */
+@layer base {
+  :root {
+    --color-bg-primary: #0a0a1a;
+    --color-text-primary: #e0e0e0;
+    --color-glass-border: rgba(255, 255, 255, 0.1);
+    --color-glass-bg: rgba(255, 255, 255, 0.05);
+  }
+
+  body {
+    @apply bg-gradient-to-br from-[#0a0a1a] to-[#1a0a2a] text-white font-sans;
+  }
+}
+
+@layer components {
+  .glass {
+    background-color: var(--color-glass-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--color-glass-border);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-out forwards;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 15px rgba(173, 216, 230, 0.4), 0 0 30px rgba(173, 216, 230, 0.2); }
+  50% { box-shadow: 0 0 25px rgba(173, 216, 230, 0.6), 0 0 40px rgba(173, 216, 230, 0.3); }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s infinite alternate;
+}

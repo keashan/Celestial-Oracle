@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { MatchDetails, UserDetails, Language } from '../types.ts';
+import { MatchDetails, UserDetails, Language } from '../../types.ts';
 
 interface MatchFormProps {
   onSubmit: (details: MatchDetails) => void;

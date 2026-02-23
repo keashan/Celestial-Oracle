@@ -1,26 +1,33 @@
-
 import React, { useState, useEffect } from 'react';
 import { UserDetails, PredictionData, Language, AppView, SignCategoryPrediction, MatchDetails, MatchPrediction } from './types.ts';
 import { getAstrologyPrediction, getAllSignPredictions, getHoroscopeMatch } from './services/geminiService.ts';
-import AstroForm from './components/AstroForm.tsx';
-import MatchForm from './components/MatchForm.tsx';
-import PredictionDisplay from './components/PredictionDisplay.tsx';
-import MatchDisplay from './components/MatchDisplay.tsx';
-import ChatInterface from './components/ChatInterface.tsx';
-import Header from './components/Header.tsx';
-import Loader from './components/Loader.tsx';
-import ConsentModal from './components/ConsentModal.tsx';
-import ZodiacHome from './components/ZodiacHome.tsx';
-import SignPrediction from './components/SignPrediction.tsx';
-import Disclaimer from './components/Disclaimer.tsx';
-import AdOverlay from './components/AdOverlay.tsx';
-import DailyDestiny from './components/DailyDestiny.tsx';
-import Sidebar from './components/Sidebar.tsx';
+import AstroForm from './src/components/AstroForm.tsx';
+import MatchForm from './src/components/MatchForm.tsx';
+import PredictionDisplay from './src/components/PredictionDisplay.tsx';
+import MatchDisplay from './src/components/MatchDisplay.tsx';
+import ChatInterface from './src/components/ChatInterface.tsx';
+import Header from './src/components/Header.tsx';
+import Loader from './src/components/Loader.tsx';
+import ConsentModal from './src/components/ConsentModal.tsx';
+import ZodiacHome from './src/components/ZodiacHome.tsx';
+import SignPrediction from './src/components/SignPrediction.tsx';
+import Disclaimer from './src/components/Disclaimer.tsx';
+import AdOverlay from './src/components/AdOverlay.tsx';
+import DailyDestiny from './src/components/DailyDestiny.tsx';
+import Sidebar from './src/components/Sidebar.tsx';
+import HowTo from './src/components/HowTo.tsx';
+import About from './src/components/About.tsx';
+import PrivacyPolicy from './src/components/PrivacyPolicy.tsx';
+import TermsOfService from './src/components/TermsOfService.tsx';
+import Footer from './src/components/Footer.tsx';
+import { useNavigate, useLocation, Routes, Route } from 'react-router-dom';
 
 const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   // Default to DAILY view as requested
-  const [view, setView] = useState<AppView>('DAILY');
+
+  const navigate = useNavigate();
+  const location = useLocation();
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [matchDetails, setMatchDetails] = useState<MatchDetails | null>(null);
   const [prediction, setPrediction] = useState<PredictionData | null>(null);
@@ -42,9 +49,7 @@ const App: React.FC = () => {
     return localStorage.getItem('cosmic_oracle_consent') === 'true';
   });
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [view]);
+
 
   useEffect(() => {
     const checkKeyStatus = async () => {
@@ -58,12 +63,14 @@ const App: React.FC = () => {
           // If bridge is not available and no env key, we can't do much but we'll show the state
           setNeedsApiKey(true);
         }
-      } else {
-        setNeedsApiKey(false);
       }
     };
     checkKeyStatus();
   }, []);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   const handleConnectKey = async () => {
     const aistudio = (window as any).aistudio;
@@ -82,7 +89,7 @@ const App: React.FC = () => {
       const data = await getAstrologyPrediction(details);
       setUserDetails(details);
       setPrediction(data);
-      setView('RESULT');
+      navigate('/result');
     } catch (err: any) {
       console.error(err);
       if (err.message?.includes("Requested entity was not found")) {
@@ -102,7 +109,7 @@ const App: React.FC = () => {
       const data = await getHoroscopeMatch(details, currentLanguage);
       setMatchDetails(details);
       setMatchPrediction(data);
-      setView('MATCH_RESULT');
+      navigate('/match-result');
     } catch (err: any) {
       console.error(err);
       setError(currentLanguage === 'si' ? "ගැළපීම් සිදු කිරීමට නොහැකි විය." : "Failed to perform matching ritual.");
@@ -116,7 +123,7 @@ const App: React.FC = () => {
     const currentLangCache = signCache[currentLanguage];
     if (currentLangCache && currentLangCache[signId]) {
       setSignDetail(currentLangCache[signId]);
-      setView('SIGN_DETAIL');
+      navigate('/sign-detail');
       return;
     }
 
@@ -129,7 +136,7 @@ const App: React.FC = () => {
       const selectedSignData = allData[signId];
       if (selectedSignData) {
         setSignDetail(selectedSignData);
-        setView('SIGN_DETAIL');
+        navigate('/sign-detail');
       } else {
         throw new Error("Sign data missing.");
       }
@@ -165,13 +172,13 @@ const App: React.FC = () => {
   };
 
   const handleReset = () => {
-    setView('DAILY');
     setUserDetails(null);
     setPrediction(null);
     setSignDetail(null);
     setMatchPrediction(null);
     setMatchDetails(null);
     setError(null);
+    navigate('/');
   };
 
   const toggleLanguage = (lang: Language) => {
@@ -183,47 +190,96 @@ const App: React.FC = () => {
     localStorage.setItem('cosmic_oracle_consent', 'true');
   };
 
-  const isZodiacMode = view === 'HOME' || view === 'SIGN_DETAIL';
-  const isPersonalizedMode = view === 'FORM' || view === 'RESULT';
-  const isMatchMode = view === 'MATCH_FORM' || view === 'MATCH_RESULT';
-  const isDailyMode = view === 'DAILY';
+  const isLegalPage = ['/about', '/privacy', '/terms', '/how-to'].includes(location.pathname);
 
   // Show ads/sidebar on ALL views as requested (including HOME, FORMS, etc.)
   const showSidebar = true;
 
-  const navButtons = [
+  const allNavButtons = [
+
     { 
       id: 'daily', 
       label: currentLanguage === 'si' ? 'අද දවසේ දෛවය' : 'Today\'s Destiny', 
-      action: () => setView('DAILY'),
-      gradient: 'from-amber-600 to-orange-600',
-      active: isDailyMode
+      action: () => { navigate('/'); }, 
+      gradient: 'from-amber-600 to-orange-600', 
+      active: location.pathname === '/' 
     },
     { 
       id: 'zodiac', 
       label: currentLanguage === 'si' ? 'ලග්න පලාපල (වාර්ෂික)' : 'Zodiac (Yearly)', 
-      action: () => setView('HOME'),
-      gradient: 'from-purple-600 to-indigo-600',
-      active: isZodiacMode
+      action: () => { navigate('/zodiac-home'); }, 
+      gradient: 'from-purple-600 to-indigo-600', 
+      active: location.pathname === '/zodiac-home' || location.pathname === '/sign-detail' 
     },
     { 
       id: 'personalized', 
       label: currentLanguage === 'si' ? 'කේන්ද්‍ර පලාපල' : 'Birth Chart', 
-      action: () => setView('FORM'),
-      gradient: 'from-blue-600 to-cyan-600',
-      active: isPersonalizedMode
+      action: () => { navigate('/form'); }, 
+      gradient: 'from-blue-600 to-cyan-600', 
+      active: location.pathname === '/form' || location.pathname === '/result' 
     },
     { 
       id: 'match', 
       label: currentLanguage === 'si' ? 'පොරොන්දම් බැලීම' : 'Match', 
-      action: () => setView('MATCH_FORM'),
-      gradient: 'from-pink-600 to-rose-600',
-      active: isMatchMode
+      action: () => { navigate('/match-form'); }, 
+      gradient: 'from-pink-600 to-rose-600', 
+      active: location.pathname === '/match-form' || location.pathname === '/match-result' 
+    },
+    { 
+      id: 'how-to', 
+      label: currentLanguage === 'si' ? 'භාවිතා කරන ආකාරය' : 'How To', 
+      action: () => { navigate('/how-to'); }, 
+      gradient: 'from-green-600 to-teal-600', 
+      active: location.pathname === '/how-to' 
+    },
+    { 
+      id: 'about', 
+      label: currentLanguage === 'si' ? 'අප ගැන' : 'About Us', 
+      action: () => { navigate('/about'); }, 
+      gradient: 'from-purple-600 to-indigo-600', 
+      active: location.pathname === '/about' 
+    },
+    { 
+      id: 'privacy', 
+      label: currentLanguage === 'si' ? 'පුද්ගලිකත්ව ප්‍රතිපත්තිය' : 'Privacy Policy', 
+      action: () => { navigate('/privacy'); }, 
+      gradient: 'from-pink-600 to-rose-600', 
+      active: location.pathname === '/privacy' 
+    },
+    { 
+      id: 'terms', 
+      label: currentLanguage === 'si' ? 'සේවා කොන්දේසි' : 'Terms of Service', 
+      action: () => { navigate('/terms'); }, 
+      gradient: 'from-red-600 to-orange-600', 
+      active: location.pathname === '/terms' 
     }
   ];
 
-  const visibleButtons = navButtons.filter(btn => !btn.active);
-  
+  const getFilteredNavButtons = () => {
+    const appNavButtons = allNavButtons.filter(btn => 
+      !['about', 'privacy', 'terms', 'how-to'].includes(btn.id)
+    );
+
+    if (isLegalPage) {
+      return [
+        {
+          id: 'home',
+          label: currentLanguage === 'si' ? 'මුල් පිටුව' : 'Home',
+          action: () => { navigate('/'); },
+          gradient: 'from-blue-600 to-cyan-600',
+          active: location.pathname === '/'
+        }
+      ];
+    } else {
+      // For app pages, show 3 buttons for other apps, excluding the current one
+      const currentAppPath = appNavButtons.find(btn => btn.active)?.id;
+      const otherAppButtons = appNavButtons.filter(btn => btn.id !== currentAppPath);
+      return otherAppButtons.slice(0, 3);
+    }
+  };
+
+  const visibleButtons = getFilteredNavButtons();
+
   return (
     <div className="min-h-screen flex flex-col items-center p-6 md:p-8 overflow-x-hidden text-white relative">
       {/* Language Toggle - Absolute Top Left */}
@@ -304,7 +360,7 @@ const App: React.FC = () => {
 
       {/* Main Layout Wrapper: Flex container for Content + Sidebar */}
       <div className="w-full max-w-[1500px] flex flex-col lg:flex-row gap-8 items-start">
-        <main className={`flex-grow w-full relative ${showSidebar ? 'max-w-5xl' : ''}`}>
+        <main className={`flex-grow w-full relative ${isLegalPage ? 'max-w-4xl mx-auto' : (showSidebar ? 'max-w-5xl' : '')}`}>
           {loading && <div className="fixed inset-0 z-[100] bg-[#0a0a1a]/80 backdrop-blur-lg flex items-center justify-center"><Loader language={currentLanguage} /></div>}
 
           {error && (
@@ -315,68 +371,45 @@ const App: React.FC = () => {
             </div>
           )}
 
-          {view === 'HOME' && (
-            <ZodiacHome 
-              language={currentLanguage} 
-              onSignSelect={handleSignSelect} 
-            />
-          )}
-
-          {view === 'DAILY' && (
-             <DailyDestiny language={currentLanguage} />
-          )}
-
-          {view === 'SIGN_DETAIL' && signDetail && (
-            <div className="animate-fade-in space-y-8">
-              <SignPrediction 
-                prediction={signDetail} 
-                language={currentLanguage} 
-                onBack={() => setView('HOME')} 
-                onGoToForm={() => setView('FORM')}
-              />
-            </div>
-          )}
-
-          {view === 'FORM' && (
-            <AstroForm 
-              onSubmit={handleFormSubmit} 
-              currentLanguage={currentLanguage} 
-              disabled={loading || needsApiKey}
-            />
-          )}
-
-          {view === 'MATCH_FORM' && (
-            <MatchForm 
-              onSubmit={handleMatchSubmit} 
-              currentLanguage={currentLanguage} 
-              disabled={loading || needsApiKey}
-            />
-          )}
-
-          {view === 'MATCH_RESULT' && matchPrediction && matchDetails && (
-            <div className="space-y-8 animate-fade-in pb-12">
-              <MatchDisplay prediction={matchPrediction} details={matchDetails} language={currentLanguage} />
-              <div className="flex justify-center">
-                <button onClick={handleReset} className="px-12 py-5 rounded-2xl bg-gradient-to-r from-pink-600 to-rose-600 hover:brightness-110 text-white font-bold uppercase tracking-[0.3em] transition-all hover:scale-[1.01] active:scale-[0.98] shadow-lg shadow-pink-500/20">
-                  {currentLanguage === 'si' ? "නැවත මුල් පිටුවට" : "Return to Home"}
-                </button>
+          <Routes>
+            <Route path="/" element={<DailyDestiny language={currentLanguage} />} />
+            <Route path="/how-to" element={<HowTo language={currentLanguage} />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            {/* Add other routes as needed, e.g., for forms and results */}
+            <Route path="/form" element={<AstroForm onSubmit={handleFormSubmit} currentLanguage={currentLanguage} disabled={loading || needsApiKey} />} />
+            <Route path="/match-form" element={<MatchForm onSubmit={handleMatchSubmit} currentLanguage={currentLanguage} disabled={loading || needsApiKey} />} />
+            <Route path="/result" element={prediction && userDetails && (
+              <div className="space-y-8 animate-fade-in pb-12">
+                <PredictionDisplay prediction={prediction} userName={userDetails.name} language={currentLanguage} />
+                <ChatInterface userDetails={userDetails} prediction={prediction} currentLanguage={currentLanguage} />
+                <div className="flex justify-center">
+                  <button onClick={handleReset} className="px-12 py-5 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:brightness-110 text-white font-bold uppercase tracking-[0.3em] transition-all hover:scale-[1.01] active:scale-[0.98] shadow-lg shadow-blue-500/20">
+                    {currentLanguage === 'si' ? "නැවත මුල් පිටුවට" : "Return to Home"}
+                  </button>
+                </div>
+                <Disclaimer language={currentLanguage} />
               </div>
-              <Disclaimer language={currentLanguage} />
-            </div>
-          )}
-
-          {view === 'RESULT' && prediction && userDetails && (
-            <div className="space-y-8 animate-fade-in pb-12">
-              <PredictionDisplay prediction={prediction} userName={userDetails.name} language={currentLanguage} />
-              <ChatInterface userDetails={userDetails} prediction={prediction} currentLanguage={currentLanguage} />
-              <div className="flex justify-center">
-                <button onClick={handleReset} className="px-12 py-5 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:brightness-110 text-white font-bold uppercase tracking-[0.3em] transition-all hover:scale-[1.01] active:scale-[0.98] shadow-lg shadow-blue-500/20">
-                  {currentLanguage === 'si' ? "නැවත මුල් පිටුවට" : "Return to Home"}
-                </button>
+            )} />
+            <Route path="/match-result" element={matchPrediction && matchDetails && (
+              <div className="space-y-8 animate-fade-in pb-12">
+                <MatchDisplay prediction={matchPrediction} details={matchDetails} language={currentLanguage} />
+                <div className="flex justify-center">
+                  <button onClick={handleReset} className="px-12 py-5 rounded-2xl bg-gradient-to-r from-pink-600 to-rose-600 hover:brightness-110 text-white font-bold uppercase tracking-[0.3em] transition-all hover:scale-[1.01] active:scale-[0.98] shadow-lg shadow-pink-500/20">
+                    {currentLanguage === 'si' ? "නැවත මුල් පිටුවට" : "Return to Home"}
+                  </button>
+                </div>
+                <Disclaimer language={currentLanguage} />
               </div>
-              <Disclaimer language={currentLanguage} />
-            </div>
-          )}
+            )} />
+            <Route path="/zodiac-home" element={<ZodiacHome language={currentLanguage} onSignSelect={handleSignSelect} />} />
+            <Route path="/sign-detail" element={signDetail && (
+              <div className="animate-fade-in space-y-8">
+                <SignPrediction prediction={signDetail} language={currentLanguage} onBack={() => navigate('/zodiac-home')} onGoToForm={() => navigate('/form')} />
+              </div>
+            )} />
+          </Routes>
 
         </main>
 
@@ -394,9 +427,7 @@ const App: React.FC = () => {
         )}
       </div>
 
-      <footer className="mt-auto py-8 text-white/30 text-xs uppercase tracking-[0.4em] text-center w-full border-t border-white/5">
-        &copy; {new Date().getFullYear()} Cosmic Oracle • Handcrafted Wisdom
-      </footer>
+      <Footer />
     </div>
   );
 };

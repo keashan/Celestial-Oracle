@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { SignCategoryPrediction, Language, ZODIAC_SIGNS } from '../types.ts';
+import { SignCategoryPrediction, Language, ZODIAC_SIGNS } from '../../types.ts';
 import Disclaimer from './Disclaimer.tsx';
 
 interface SignPredictionProps {
