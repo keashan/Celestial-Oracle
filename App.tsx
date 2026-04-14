@@ -39,7 +39,21 @@ const App: React.FC = () => {
   
   const [needsApiKey, setNeedsApiKey] = useState(false);
   
-  const [currentLanguage, setCurrentLanguage] = useState<Language>('en');
+  const [currentLanguage, setCurrentLanguage] = useState<Language>(() => {
+    return window.location.pathname.startsWith('/si') ? 'si' : 'en';
+  });
+
+  useEffect(() => {
+    const isSi = location.pathname.startsWith('/si');
+    setCurrentLanguage(isSi ? 'si' : 'en');
+  }, [location.pathname]);
+
+  const getLangPath = (path: string) => {
+    if (currentLanguage === 'si') {
+      return `/si${path === '/' ? '' : path}`;
+    }
+    return path;
+  };
   
   // Overlay State
   const [adOverlayActive, setAdOverlayActive] = useState(false);
@@ -89,7 +103,7 @@ const App: React.FC = () => {
       const data = await getAstrologyPrediction(details);
       setUserDetails(details);
       setPrediction(data);
-      navigate('/result');
+    navigate(getLangPath('/result'));
     } catch (err: any) {
       console.error(err);
       if (err.message?.includes("Requested entity was not found")) {
@@ -109,7 +123,7 @@ const App: React.FC = () => {
       const data = await getHoroscopeMatch(details, currentLanguage);
       setMatchDetails(details);
       setMatchPrediction(data);
-      navigate('/match-result');
+      navigate(getLangPath('/match-result'));
     } catch (err: any) {
       console.error(err);
       setError(currentLanguage === 'si' ? "ගැළපීම් සිදු කිරීමට නොහැකි විය." : "Failed to perform matching ritual.");
@@ -123,7 +137,7 @@ const App: React.FC = () => {
     const currentLangCache = signCache[currentLanguage];
     if (currentLangCache && currentLangCache[signId]) {
       setSignDetail(currentLangCache[signId]);
-      navigate('/sign-detail');
+      navigate(getLangPath('/sign-detail'));
       return;
     }
 
@@ -136,7 +150,7 @@ const App: React.FC = () => {
       const selectedSignData = allData[signId];
       if (selectedSignData) {
         setSignDetail(selectedSignData);
-        navigate('/sign-detail');
+        navigate(getLangPath('/sign-detail'));
       } else {
         throw new Error("Sign data missing.");
       }
@@ -178,11 +192,18 @@ const App: React.FC = () => {
     setMatchPrediction(null);
     setMatchDetails(null);
     setError(null);
-    navigate('/');
+    navigate(getLangPath('/'));
   };
 
   const toggleLanguage = (lang: Language) => {
-    setCurrentLanguage(lang);
+    const isCurrentlySi = location.pathname.startsWith('/si');
+    if (lang === 'si' && !isCurrentlySi) {
+      const newPath = '/si' + (location.pathname === '/' ? '' : location.pathname);
+      navigate(newPath);
+    } else if (lang === 'en' && isCurrentlySi) {
+      const newPath = location.pathname.replace(/^\/si/, '') || '/';
+      navigate(newPath);
+    }
   };
 
   const handleAcceptConsent = () => {
@@ -190,7 +211,9 @@ const App: React.FC = () => {
     localStorage.setItem('cosmic_oracle_consent', 'true');
   };
 
-  const isLegalPage = ['/about', '/privacy', '/terms', '/how-to'].includes(location.pathname);
+  const isLegalPage = ['/about', '/privacy', '/terms', '/how-to'].some(p => 
+    location.pathname === p || location.pathname === `/si${p}`
+  );
 
   // Show ads/sidebar on ALL views as requested (including HOME, FORMS, etc.)
   const showSidebar = true;
@@ -200,58 +223,58 @@ const App: React.FC = () => {
     { 
       id: 'daily', 
       label: currentLanguage === 'si' ? 'අද දවසේ දෛවය' : 'Today\'s Destiny', 
-      action: () => { navigate('/'); }, 
+      action: () => { navigate(getLangPath('/')); }, 
       gradient: 'from-amber-600 to-orange-600', 
-      active: location.pathname === '/' 
+      active: location.pathname === '/' || location.pathname === '/si'
     },
     { 
       id: 'zodiac', 
       label: currentLanguage === 'si' ? 'ලග්න පලාපල (වාර්ෂික)' : 'Zodiac (Yearly)', 
-      action: () => { navigate('/zodiac-home'); }, 
+      action: () => { navigate(getLangPath('/zodiac-home')); }, 
       gradient: 'from-purple-600 to-indigo-600', 
-      active: location.pathname === '/zodiac-home' || location.pathname === '/sign-detail' 
+      active: location.pathname === '/zodiac-home' || location.pathname === '/si/zodiac-home' || location.pathname === '/sign-detail' || location.pathname === '/si/sign-detail'
     },
     { 
       id: 'personalized', 
       label: currentLanguage === 'si' ? 'කේන්ද්‍ර පලාපල' : 'Birth Chart', 
-      action: () => { navigate('/form'); }, 
+      action: () => { navigate(getLangPath('/form')); }, 
       gradient: 'from-blue-600 to-cyan-600', 
-      active: location.pathname === '/form' || location.pathname === '/result' 
+      active: location.pathname === '/form' || location.pathname === '/si/form' || location.pathname === '/result' || location.pathname === '/si/result'
     },
     { 
       id: 'match', 
       label: currentLanguage === 'si' ? 'පොරොන්දම් බැලීම' : 'Match', 
-      action: () => { navigate('/match-form'); }, 
+      action: () => { navigate(getLangPath('/match-form')); }, 
       gradient: 'from-pink-600 to-rose-600', 
-      active: location.pathname === '/match-form' || location.pathname === '/match-result' 
+      active: location.pathname === '/match-form' || location.pathname === '/si/match-form' || location.pathname === '/match-result' || location.pathname === '/si/match-result'
     },
     { 
       id: 'how-to', 
       label: currentLanguage === 'si' ? 'භාවිතා කරන ආකාරය' : 'How To', 
-      action: () => { navigate('/how-to'); }, 
+      action: () => { navigate(getLangPath('/how-to')); }, 
       gradient: 'from-green-600 to-teal-600', 
-      active: location.pathname === '/how-to' 
+      active: location.pathname === '/how-to' || location.pathname === '/si/how-to'
     },
     { 
       id: 'about', 
       label: currentLanguage === 'si' ? 'අප ගැන' : 'About Us', 
-      action: () => { navigate('/about'); }, 
+      action: () => { navigate(getLangPath('/about')); }, 
       gradient: 'from-purple-600 to-indigo-600', 
-      active: location.pathname === '/about' 
+      active: location.pathname === '/about' || location.pathname === '/si/about'
     },
     { 
       id: 'privacy', 
       label: currentLanguage === 'si' ? 'පුද්ගලිකත්ව ප්‍රතිපත්තිය' : 'Privacy Policy', 
-      action: () => { navigate('/privacy'); }, 
+      action: () => { navigate(getLangPath('/privacy')); }, 
       gradient: 'from-pink-600 to-rose-600', 
-      active: location.pathname === '/privacy' 
+      active: location.pathname === '/privacy' || location.pathname === '/si/privacy'
     },
     { 
       id: 'terms', 
       label: currentLanguage === 'si' ? 'සේවා කොන්දේසි' : 'Terms of Service', 
-      action: () => { navigate('/terms'); }, 
+      action: () => { navigate(getLangPath('/terms')); }, 
       gradient: 'from-red-600 to-orange-600', 
-      active: location.pathname === '/terms' 
+      active: location.pathname === '/terms' || location.pathname === '/si/terms'
     }
   ];
 
@@ -372,43 +395,46 @@ const App: React.FC = () => {
           )}
 
           <Routes>
-            <Route path="/" element={<DailyDestiny language={currentLanguage} />} />
-            <Route path="/how-to" element={<HowTo language={currentLanguage} />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/terms" element={<TermsOfService />} />
-            {/* Add other routes as needed, e.g., for forms and results */}
-            <Route path="/form" element={<AstroForm onSubmit={handleFormSubmit} currentLanguage={currentLanguage} disabled={loading || needsApiKey} />} />
-            <Route path="/match-form" element={<MatchForm onSubmit={handleMatchSubmit} currentLanguage={currentLanguage} disabled={loading || needsApiKey} />} />
-            <Route path="/result" element={prediction && userDetails && (
-              <div className="space-y-8 animate-fade-in pb-12">
-                <PredictionDisplay prediction={prediction} userName={userDetails.name} language={currentLanguage} />
-                <ChatInterface userDetails={userDetails} prediction={prediction} currentLanguage={currentLanguage} />
-                <div className="flex justify-center">
-                  <button onClick={handleReset} className="px-12 py-5 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:brightness-110 text-white font-bold uppercase tracking-[0.3em] transition-all hover:scale-[1.01] active:scale-[0.98] shadow-lg shadow-blue-500/20">
-                    {currentLanguage === 'si' ? "නැවත මුල් පිටුවට" : "Return to Home"}
-                  </button>
-                </div>
-                <Disclaimer language={currentLanguage} />
-              </div>
-            )} />
-            <Route path="/match-result" element={matchPrediction && matchDetails && (
-              <div className="space-y-8 animate-fade-in pb-12">
-                <MatchDisplay prediction={matchPrediction} details={matchDetails} language={currentLanguage} />
-                <div className="flex justify-center">
-                  <button onClick={handleReset} className="px-12 py-5 rounded-2xl bg-gradient-to-r from-pink-600 to-rose-600 hover:brightness-110 text-white font-bold uppercase tracking-[0.3em] transition-all hover:scale-[1.01] active:scale-[0.98] shadow-lg shadow-pink-500/20">
-                    {currentLanguage === 'si' ? "නැවත මුල් පිටුවට" : "Return to Home"}
-                  </button>
-                </div>
-                <Disclaimer language={currentLanguage} />
-              </div>
-            )} />
-            <Route path="/zodiac-home" element={<ZodiacHome language={currentLanguage} onSignSelect={handleSignSelect} />} />
-            <Route path="/sign-detail" element={signDetail && (
-              <div className="animate-fade-in space-y-8">
-                <SignPrediction prediction={signDetail} language={currentLanguage} onBack={() => navigate('/zodiac-home')} onGoToForm={() => navigate('/form')} />
-              </div>
-            )} />
+            {['', '/si'].map(prefix => (
+              <React.Fragment key={prefix}>
+                <Route path={prefix === '' ? '/' : prefix} element={<DailyDestiny language={currentLanguage} />} />
+                <Route path={`${prefix}/how-to`} element={<HowTo language={currentLanguage} />} />
+                <Route path={`${prefix}/about`} element={<About />} />
+                <Route path={`${prefix}/privacy`} element={<PrivacyPolicy />} />
+                <Route path={`${prefix}/terms`} element={<TermsOfService />} />
+                <Route path={`${prefix}/form`} element={<AstroForm onSubmit={handleFormSubmit} currentLanguage={currentLanguage} disabled={loading || needsApiKey} />} />
+                <Route path={`${prefix}/match-form`} element={<MatchForm onSubmit={handleMatchSubmit} currentLanguage={currentLanguage} disabled={loading || needsApiKey} />} />
+                <Route path={`${prefix}/result`} element={prediction && userDetails && (
+                  <div className="space-y-8 animate-fade-in pb-12">
+                    <PredictionDisplay prediction={prediction} userName={userDetails.name} language={currentLanguage} />
+                    <ChatInterface userDetails={userDetails} prediction={prediction} currentLanguage={currentLanguage} />
+                    <div className="flex justify-center">
+                      <button onClick={handleReset} className="px-12 py-5 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:brightness-110 text-white font-bold uppercase tracking-[0.3em] transition-all hover:scale-[1.01] active:scale-[0.98] shadow-lg shadow-blue-500/20">
+                        {currentLanguage === 'si' ? "නැවත මුල් පිටුවට" : "Return to Home"}
+                      </button>
+                    </div>
+                    <Disclaimer language={currentLanguage} />
+                  </div>
+                )} />
+                <Route path={`${prefix}/match-result`} element={matchPrediction && matchDetails && (
+                  <div className="space-y-8 animate-fade-in pb-12">
+                    <MatchDisplay prediction={matchPrediction} details={matchDetails} language={currentLanguage} />
+                    <div className="flex justify-center">
+                      <button onClick={handleReset} className="px-12 py-5 rounded-2xl bg-gradient-to-r from-pink-600 to-rose-600 hover:brightness-110 text-white font-bold uppercase tracking-[0.3em] transition-all hover:scale-[1.01] active:scale-[0.98] shadow-lg shadow-pink-500/20">
+                        {currentLanguage === 'si' ? "නැවත මුල් පිටුවට" : "Return to Home"}
+                      </button>
+                    </div>
+                    <Disclaimer language={currentLanguage} />
+                  </div>
+                )} />
+                <Route path={`${prefix}/zodiac-home`} element={<ZodiacHome language={currentLanguage} onSignSelect={handleSignSelect} />} />
+                <Route path={`${prefix}/sign-detail`} element={signDetail && (
+                  <div className="animate-fade-in space-y-8">
+                    <SignPrediction prediction={signDetail} language={currentLanguage} onBack={() => navigate(getLangPath('/zodiac-home'))} onGoToForm={() => navigate(getLangPath('/form'))} />
+                  </div>
+                )} />
+              </React.Fragment>
+            ))}
           </Routes>
 
         </main>

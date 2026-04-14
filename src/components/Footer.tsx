@@ -1,7 +1,11 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 const Footer: React.FC = () => {
+  const location = useLocation();
+  const isSi = location.pathname.startsWith('/si');
+  const prefix = isSi ? '/si' : '';
+
   return (
     <footer className="bg-gray-900 text-gray-300 py-8 px-4 md:px-8 lg:px-16">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -15,9 +19,9 @@ const Footer: React.FC = () => {
         <div className="col-span-1">
           <h4 className="text-lg font-semibold text-white mb-4">Discover</h4>
           <ul className="space-y-2">
-            <li><Link to="/" className="hover:text-white transition-colors duration-200">Home</Link></li>
-            <li><Link to="/about" className="hover:text-white transition-colors duration-200">About</Link></li>
-            <li><Link to="/how-to" className="hover:text-white transition-colors duration-200">How To</Link></li>
+            <li><Link to={prefix || "/"} className="hover:text-white transition-colors duration-200">Home</Link></li>
+            <li><Link to={`${prefix}/about`} className="hover:text-white transition-colors duration-200">About</Link></li>
+            <li><Link to={`${prefix}/how-to`} className="hover:text-white transition-colors duration-200">How To</Link></li>
 
           </ul>
         </div>
@@ -25,8 +29,8 @@ const Footer: React.FC = () => {
         <div className="col-span-1">
           <h4 className="text-lg font-semibold text-white mb-4">Legal</h4>
           <ul className="space-y-2">
-            <li><Link to="/terms" className="hover:text-white transition-colors duration-200">Terms of Service</Link></li>
-            <li><Link to="/privacy" className="hover:text-white transition-colors duration-200">Privacy Policy</Link></li>
+            <li><Link to={`${prefix}/terms`} className="hover:text-white transition-colors duration-200">Terms of Service</Link></li>
+            <li><Link to={`${prefix}/privacy`} className="hover:text-white transition-colors duration-200">Privacy Policy</Link></li>
           </ul>
         </div>
       </div>
