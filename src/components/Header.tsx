@@ -18,9 +18,10 @@ const Header: React.FC<HeaderProps> = ({ language }) => {
         <div className="absolute inset-0 bg-purple-500/20 blur-xl rounded-full group-hover:bg-purple-500/30 transition-all duration-700"></div>
         
         <img 
-          src="/logo.png" 
+          src="https://i.imgur.com/JUYyd8A.png" 
           alt="Cosmic Oracle" 
           className="relative z-10 w-20 h-20 md:w-24 md:h-24 object-contain drop-shadow-[0_0_20px_rgba(255,255,255,0.15)] transition-transform duration-700 hover:scale-105"
+          referrerPolicy="no-referrer"
         />
       </div>
 

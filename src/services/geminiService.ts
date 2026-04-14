@@ -4,13 +4,13 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
 
 const FIREBASE_CONFIG = {
-  apiKey: (import.meta as any).env.VITE_FIREBASE_API_KEY,
-  authDomain: (import.meta as any).env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: (import.meta as any).env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: (import.meta as any).env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: (import.meta as any).env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: (import.meta as any).env.VITE_FIREBASE_APP_ID,
-  measurementId: (import.meta as any).env.VITE_FIREBASE_MEASUREMENT_ID,
+  apiKey: "AIzaSyCx39jX2WUHzx3pwKSSweoNbHIqs_e9xtk",
+  authDomain: "cosmicoracle-4b604.firebaseapp.com",
+  projectId: "cosmicoracle-4b604",
+  storageBucket: "cosmicoracle-4b604.firebasestorage.app",
+  messagingSenderId: "181825365245",
+  appId: "1:181825365245:web:6e90042dfe558b7c9e8a94",
+  measurementId: "G-XEMFQCD157"
 };
 
 const app = initializeApp(FIREBASE_CONFIG);
