@@ -20,14 +20,8 @@ export default async function handler(req: any, res: any) {
       throw new Error("Missing environment variables (GEMINI_API_KEY, FB_PAGE_ID, or FB_PAGE_ACCESS_TOKEN)");
     }
 
-    const genAI = new GoogleGenAI(apiKey);
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      generationConfig: {
-        responseMimeType: "application/json",
-      }
-    });
-
+    const genAI = new GoogleGenAI({ apiKey });
+    
     // 2. Generate the Daily Destiny
     const prompt = `Generate a mystical "Today's Destiny" prediction for a Facebook post. 
     Include:
@@ -40,8 +34,19 @@ export default async function handler(req: any, res: any) {
     Use emojis to make it look celestial and engaging.
     Language: English.`;
 
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
+    const response = await genAI.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: [{ parts: [{ text: prompt }] }],
+      config: {
+        responseMimeType: "application/json",
+        thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH }
+      }
+    });
+
+    const responseText = response.text;
+    if (!responseText) {
+      throw new Error("No response from Gemini");
+    }
     const prediction = JSON.parse(responseText);
     const postMessage = prediction.message;
 
