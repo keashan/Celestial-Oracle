@@ -8,7 +8,7 @@
   "crons": [
     {
       "path": "/api/cron/post-destiny",
-      "schedule": "0 8 * * *"
+      "schedule": "0 5 * * *"
     }
   ]
 }
