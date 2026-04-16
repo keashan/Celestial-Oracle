@@ -1,297 +1,367 @@
-import { GoogleGenAI, GenerateContentResponse, ThinkingLevel } from "@google/genai";
-import { UserDetails, PredictionData, SignCategoryPrediction, Language, MatchDetails, MatchPrediction } from '../types';
-import { initializeApp } from "firebase/app";
-import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
 
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCx39jX2WUHzx3pwKSSweoNbHIqs_e9xtk",
-  authDomain: "cosmicoracle-4b604.firebaseapp.com",
-  projectId: "cosmicoracle-4b604",
-  storageBucket: "cosmicoracle-4b604.firebasestorage.app",
-  messagingSenderId: "181825365245",
-  appId: "1:181825365245:web:6e90042dfe558b7c9e8a94",
-  measurementId: "G-XEMFQCD157"
-};
+import { GoogleGenAI, Type } from "@google/genai";
+import { UserDetails, PredictionData, Language, Message, SignCategoryPrediction, MatchDetails, MatchPrediction, DailyPrediction } from "../types.js";
+import { db } from "./firebase.js";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
-const app = initializeApp(FIREBASE_CONFIG);
-const db = getFirestore(app);
-
-const getGeminiClient = () => {
-  const apiKey = process.env.API_KEY || (import.meta as any).env?.VITE_API_KEY;
-  if (!apiKey) {
-    throw new Error("Gemini API Key not found. Please connect your API key.");
+/**
+ * Gets the API key from environment or bridge.
+ */
+function getApiKey(): string {
+  const key = process.env.API_KEY || (import.meta as any).env?.VITE_API_KEY || process.env.VITE_API_KEY;
+  if (!key) {
+    throw new Error('API_KEY is not configured in the environment.');
   }
-  return new GoogleGenAI({ apiKey });
-};
-
-const generateCacheKey = (type: string, details: any, language: Language) => {
-  return `${type}-${language}-${JSON.stringify(details)}`;
-};
-
-const fetchFromCache = async (cacheKey: string) => {
-  const docRef = doc(db, "predictions", cacheKey);
-  const docSnap = await getDoc(docRef);
-  if (docSnap.exists()) {
-    return docSnap.data().data;
-  }
-  return null;
-};
-
-const saveToCache = async (cacheKey: string, data: any) => {
-  const docRef = doc(db, "predictions", cacheKey);
-  await setDoc(docRef, { data, timestamp: new Date() });
-};
-
-export const getAstrologyPrediction = async (userDetails: UserDetails): Promise<PredictionData> => {
-  const ai = getGeminiClient();
-  const cacheKey = generateCacheKey("astrology", userDetails, 'en'); // Cache always in English
-  const cachedData = await fetchFromCache(cacheKey);
-  if (cachedData) {
-    return cachedData;
-  }
-
-  const prompt = `Generate a detailed astrological prediction for the following user based on their birth details. Provide a comprehensive analysis covering various aspects of their life. The response should be in JSON format, adhering to the PredictionData interface. Ensure all fields are populated with meaningful and relevant information. The output should be directly parsable JSON, with no markdown or extra text.
-
-User Details:
-Name: ${userDetails.name}
-Date of Birth: ${userDetails.dob}
-Time of Birth: ${userDetails.tob}
-Country: ${userDetails.country}
-City: ${userDetails.city}
-Gender: ${userDetails.gender}
-
-PredictionData interface:
-interface PredictionData {
-  horoscope: string;
-  luckyNumbers: number[];
-  luckyColor: string;
-  compatibility: string;
-  mood: string;
-  career: string;
-  travel: string;
-  health: string;
-  emotions: string;
-  personalLife: string;
-  finance: string;
-  summary: string;
-}
-`;
-
-  try {
-    const response: GenerateContentResponse = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: [{ parts: [{ text: prompt }] }],
-      config: {
-        responseMimeType: "application/json",
-        thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH }
-      }
-    });
-
-    const text = response.text;
-    if (!text) {
-      throw new Error("No prediction text received.");
-    }
-
-    const prediction = JSON.parse(text) as PredictionData;
-    await saveToCache(cacheKey, prediction);
-    return prediction;
-  } catch (error) {
-    console.error("Error getting astrology prediction:", error);
-    throw error;
-  }
-};
-
-export const getHoroscopeMatch = async (matchDetails: MatchDetails, language: Language): Promise<MatchPrediction> => {
-  const ai = getGeminiClient();
-  const cacheKey = generateCacheKey("match", matchDetails, language);
-  const cachedData = await fetchFromCache(cacheKey);
-  if (cachedData) {
-    return cachedData;
-  }
-
-  const prompt = `Generate a detailed horoscope compatibility report for two individuals. The response should be in JSON format, adhering to the MatchPrediction interface. Ensure all fields are populated with meaningful and relevant information. The output should be directly parsable JSON, with no markdown or extra text.
-
-Individual 1 Details:
-Name: ${matchDetails.name1}
-Date of Birth: ${matchDetails.dob1}
-Time of Birth: ${matchDetails.tob1}
-Country: ${matchDetails.country1}
-City: ${matchDetails.city1}
-Gender: ${matchDetails.gender1}
-
-Individual 2 Details:
-Name: ${matchDetails.name2}
-Date of Birth: ${matchDetails.dob2}
-Time of Birth: ${matchDetails.tob2}
-Country: ${matchDetails.country2}
-City: ${matchDetails.city2}
-Gender: ${matchDetails.gender2}
-
-MatchPrediction interface:
-interface MatchPrediction {
-  compatibilityScore: number; // A score from 0-100
-  strengths: string[];
-  challenges: string[];
-  advice: string;
-  summary: string;
+  return key;
 }
 
-Provide the response in ${language === 'si' ? 'Sinhala' : 'English'}.
-`;
-
-  try {
-    const response: GenerateContentResponse = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: [{ parts: [{ text: prompt }] }],
-      config: {
-        responseMimeType: "application/json",
-        thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH }
-      }
-    });
-
-    const text = response.text;
-    if (!text) {
-      throw new Error("No match prediction text received.");
-    }
-
-    const matchPrediction = JSON.parse(text) as MatchPrediction;
-    await saveToCache(cacheKey, matchPrediction);
-    return matchPrediction;
-  } catch (error) {
-    console.error("Error getting horoscope match:", error);
-    throw error;
-  }
+/**
+ * Helper to get document ID for caching
+ */
+const getDocId = (prefix: string, lang: Language) => {
+  const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  return `${prefix}_${date}_${lang}`;
 };
 
-export const getAllSignPredictions = async (language: Language): Promise<Record<string, SignCategoryPrediction>> => {
-  const ai = getGeminiClient();
-  const cacheKey = generateCacheKey("allSigns", {}, language);
-  const cachedData = await fetchFromCache(cacheKey);
-  if (cachedData) {
-    return cachedData;
-  }
-
-  const prompt = `Generate detailed astrological predictions for all 12 zodiac signs. The response should be a JSON object where keys are the sign IDs (e.g., 'aries', 'taurus') and values are objects adhering to the SignCategoryPrediction interface. Ensure all fields are populated with meaningful and relevant information. The output should be directly parsable JSON, with no markdown or extra text.
-
-SignCategoryPrediction interface:
-interface SignCategoryPrediction {
-  id: string;
-  name: string;
-  dateRange: string;
-  symbol: string;
-  element: string;
-  rulingPlanet: string;
-  traits: string[];
-  prediction: string;
-  compatibilitySigns: string[];
-}
-
-Provide the response in ${language === 'si' ? 'Sinhala' : 'English'}.
-`;
+/**
+ * Generates category-based predictions for ALL 12 zodiac signs.
+ * Uses Firebase Firestore Caching (One global call per day per language).
+ */
+export async function getAllSignPredictions(language: Language): Promise<Record<string, SignCategoryPrediction>> {
+  const docId = getDocId('zodiac_yearly', language);
+  const docRef = doc(db, "predictions", docId);
 
   try {
-    const response: GenerateContentResponse = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: [{ parts: [{ text: prompt }] }],
-      config: {
-        responseMimeType: "application/json",
-        thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH }
-      }
-    });
-
-    const text = response.text;
-    if (!text) {
-      throw new Error("No sign predictions text received.");
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      console.log("Using Firestore cached 12-month forecast");
+      return docSnap.data().data as Record<string, SignCategoryPrediction>;
     }
-
-    const allSignPredictions = JSON.parse(text) as Record<string, SignCategoryPrediction>;
-    await saveToCache(cacheKey, allSignPredictions);
-    return allSignPredictions;
-  } catch (error) {
-    console.error("Error getting all sign predictions:", error);
-    throw error;
+  } catch (e) {
+    console.warn("Firestore cache read failed, falling back to API", e);
   }
-};
 
-export const getChatResponse = async (history: any[], newMessage: string, userDetails: UserDetails, prediction: PredictionData, language: Language): Promise<string> => {
-  const ai = getGeminiClient();
+  const apiKey = getApiKey();
+  const ai = new GoogleGenAI({ apiKey });
 
-  const chat = ai.chats.create({
-    model: "gemini-3-flash-preview",
-    config: {
-      systemInstruction: `You are a helpful and mystical cosmic oracle. Provide guidance and insights based on the user's astrological prediction and birth details. Keep your responses concise, encouraging, and aligned with the mystical theme. Respond in ${language === 'si' ? 'Sinhala' : 'English'}.`,
-      thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH }
+  const langInstruction = language === 'si' 
+    ? "IMPORTANT: All values in the JSON response MUST be strictly in Sinhala language (සිංහල). Keep the tone mystical and professional." 
+    : "All output text MUST be in English. Use a sophisticated, mystical, and encouraging tone.";
+
+  const signSchema = {
+    type: Type.OBJECT,
+    properties: {
+      sign: { type: Type.STRING },
+      symbol: { type: Type.STRING },
+      categories: {
+        type: Type.OBJECT,
+        properties: {
+          general: { type: Type.STRING },
+          love: { type: Type.STRING },
+          money: { type: Type.STRING },
+          career: { type: Type.STRING },
+          education: { type: Type.STRING },
+          health: { type: Type.STRING },
+        },
+        required: ["general", "love", "money", "career", "education", "health"]
+      }
     },
-    history: history.map(msg => ({ role: msg.role, parts: [{ text: msg.text }] }))
+    required: ["sign", "symbol", "categories"]
+  };
+
+  const prompt = `
+    Provide a professional astrological outlook for ALL 12 zodiac signs for the next 12 months.
+    
+    CRITICAL: Use the VEDIC (SIDEREAL/NIRAYANA) astrological framework.
+    
+    ${langInstruction}
+    
+    CONTENT DEPTH GUIDELINES:
+    1. 'general': Extensive analysis (8-10 sentences).
+    2. 'love', 'money', 'career', 'education', 'health': Meaningful summary (3-4 sentences).
+    
+    Return a JSON object where each key is the lowercase sign ID (e.g. "aries") and the value contains:
+    1. Sign name
+    2. Symbol (emoji only)
+    3. Insights for categories.
+  `;
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+      thinkingConfig: { thinkingBudget: 0 },
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          predictions: {
+            type: Type.OBJECT,
+            properties: {
+              aries: signSchema, taurus: signSchema, gemini: signSchema, cancer: signSchema,
+              leo: signSchema, virgo: signSchema, libra: signSchema, scorpio: signSchema,
+              sagittarius: signSchema, capricorn: signSchema, aquarius: signSchema, pisces: signSchema
+            },
+            required: ["aries", "taurus", "gemini", "cancer", "leo", "virgo", "libra", "scorpio", "sagittarius", "capricorn", "aquarius", "pisces"]
+          }
+        },
+        required: ["predictions"]
+      }
+    }
   });
 
-  const fullPrompt = `User's Birth Details: ${JSON.stringify(userDetails)}
-User's Astrology Prediction: ${JSON.stringify(prediction)}
-
-User: ${newMessage}`;
-
+  const text = response.text;
+  if (!text) throw new Error('The oracle returned an empty signal.');
+  const parsed = JSON.parse(text);
+  
+  const results: Record<string, SignCategoryPrediction> = {};
+  Object.keys(parsed.predictions).forEach(key => {
+    const data = parsed.predictions[key];
+    results[key] = {
+      sign: data.sign,
+      symbol: data.symbol,
+      categories: data.categories
+    };
+  });
+  
   try {
-    const response: GenerateContentResponse = await chat.sendMessage({ message: fullPrompt });
-    const text = response.text;
-    if (!text) {
-      throw new Error("No chat response text received.");
-    }
-    return text;
-  } catch (error) {
-    console.error("Error getting chat response:", error);
-    throw error;
-  }
-};
-
-export const getDailyDestiny = async (language: Language): Promise<PredictionData> => {
-  const ai = getGeminiClient();
-  const today = new Date().toISOString().slice(0, 10);
-  const cacheKey = generateCacheKey("dailyDestiny", { date: today }, language);
-  const cachedData = await fetchFromCache(cacheKey);
-  if (cachedData) {
-    return cachedData;
+    await setDoc(docRef, { data: results, timestamp: new Date() });
+  } catch (e) {
+    console.warn("Firestore cache save failed", e);
   }
 
-  const prompt = `Generate a general daily destiny prediction for today. The response should be in JSON format, adhering to the PredictionData interface. Ensure all fields are populated with meaningful and relevant information. The output should be directly parsable JSON, with no markdown or extra text.
-
-PredictionData interface:
-interface PredictionData {
-  horoscope: string;
-  luckyNumbers: number[];
-  luckyColor: string;
-  compatibility: string;
-  mood: string;
-  career: string;
-  travel: string;
-  health: string;
-  emotions: string;
-  personalLife: string;
-  finance: string;
-  summary: string;
+  return results;
 }
 
-Provide the response in ${language === 'si' ? 'Sinhala' : 'English'}.`;
+/**
+ * Generates Daily Predictions for ALL 12 Signs.
+ * Uses Firebase Firestore Caching (One global call per day per language).
+ */
+export async function getDailyPredictions(language: Language): Promise<Record<string, DailyPrediction>> {
+  const docId = getDocId('daily_destiny', language);
+  const docRef = doc(db, "predictions", docId);
 
   try {
-    const response: GenerateContentResponse = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: [{ parts: [{ text: prompt }] }],
-      config: {
-        responseMimeType: "application/json",
-        thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH }
-      }
-    });
-
-    const text = response.text;
-    if (!text) {
-      throw new Error("No daily destiny text received.");
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      console.log("Using Firestore cached daily destiny");
+      return docSnap.data().data as Record<string, DailyPrediction>;
     }
-
-    const prediction = JSON.parse(text) as PredictionData;
-    await saveToCache(cacheKey, prediction);
-    return prediction;
-  } catch (error) {
-    console.error("Error getting daily destiny prediction:", error);
-    throw error;
+  } catch (e) {
+    console.warn("Firestore cache read failed, falling back to API", e);
   }
-};
+
+  const apiKey = getApiKey();
+  const ai = new GoogleGenAI({ apiKey });
+
+  const dateStr = new Date().toLocaleDateString(language === 'si' ? 'si-LK' : 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+  const langInstruction = language === 'si' 
+    ? "IMPORTANT: All output text MUST be strictly in Sinhala language (සිංහල)." 
+    : "All output text MUST be in English.";
+
+  const dailySchema = {
+    type: Type.OBJECT,
+    properties: {
+      sign: { type: Type.STRING },
+      prediction: { type: Type.STRING },
+      luckyColor: { type: Type.STRING },
+      luckyNumber: { type: Type.STRING },
+      mood: { type: Type.STRING },
+      celestialTip: { type: Type.STRING }
+    },
+    required: ["sign", "prediction", "luckyColor", "luckyNumber", "mood", "celestialTip"]
+  };
+
+  const prompt = `
+    Generate a detailed DAILY Horoscope for ALL 12 Zodiac signs for today: ${dateStr}.
+    Use Vedic principles and provide deep cosmic insights.
+    ${langInstruction}
+    
+    For each sign provide:
+    - prediction: A detailed 4-5 sentence analysis of the day's energy, covering personal growth and cosmic alignment.
+    - luckyColor: A specific color name.
+    - luckyNumber: A single lucky number.
+    - mood: A descriptive word for the day's emotional state.
+    - celestialTip: A unique, mystical piece of advice or a ritual for the day.
+  `;
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+      thinkingConfig: { thinkingBudget: 0 },
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          predictions: {
+            type: Type.OBJECT,
+            properties: {
+              aries: dailySchema, taurus: dailySchema, gemini: dailySchema, cancer: dailySchema,
+              leo: dailySchema, virgo: dailySchema, libra: dailySchema, scorpio: dailySchema,
+              sagittarius: dailySchema, capricorn: dailySchema, aquarius: dailySchema, pisces: dailySchema
+            },
+            required: ["aries", "taurus", "gemini", "cancer", "leo", "virgo", "libra", "scorpio", "sagittarius", "capricorn", "aquarius", "pisces"]
+          }
+        },
+        required: ["predictions"]
+      }
+    }
+  });
+
+  const text = response.text;
+  if (!text) throw new Error('Daily ritual failed.');
+  const parsed = JSON.parse(text);
+
+  const results: Record<string, DailyPrediction> = parsed.predictions;
+  
+  try {
+    await setDoc(docRef, { data: results, timestamp: new Date() });
+  } catch (e) {
+    console.warn("Firestore cache save failed", e);
+  }
+
+  return results;
+}
+
+/**
+ * Generates compatibility match.
+ */
+export async function getHoroscopeMatch(details: MatchDetails, language: Language): Promise<MatchPrediction> {
+  const apiKey = getApiKey();
+  const ai = new GoogleGenAI({ apiKey });
+
+  const langInstruction = language === 'si' 
+    ? "IMPORTANT: All output text MUST be strictly in Sinhala language (සිංහල)." 
+    : "All output text MUST be in English.";
+
+  const prompt = `
+    Astrological compatibility based on VEDIC (SIDEREAL) astrology (Koota matching principle) for:
+    P1: ${details.person1.name}, P2: ${details.person2.name}.
+    ${langInstruction}
+  `;
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+      thinkingConfig: { thinkingBudget: 0 },
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          score: { type: Type.NUMBER },
+          summary: { type: Type.STRING },
+          categories: {
+            type: Type.OBJECT,
+            properties: {
+              emotional: { type: Type.STRING }, physical: { type: Type.STRING },
+              intellectual: { type: Type.STRING }, spiritual: { type: Type.STRING }
+            },
+            required: ["emotional", "physical", "intellectual", "spiritual"]
+          },
+          conclusion: { type: Type.STRING }
+        },
+        required: ["score", "summary", "categories", "conclusion"]
+      }
+    }
+  });
+
+  const text = response.text;
+  if (!text) throw new Error('Matching ritual failed.');
+  return JSON.parse(text) as MatchPrediction;
+}
+
+/**
+ * Generates a DEEP 12-month birth chart forecast.
+ */
+export async function getAstrologyPrediction(details: UserDetails): Promise<PredictionData> {
+  const apiKey = getApiKey();
+  const ai = new GoogleGenAI({ apiKey });
+  
+  const currentDate = new Date();
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const currentMonthName = monthNames[currentDate.getMonth()];
+  const currentYear = currentDate.getFullYear();
+
+  const langInstruction = details.language === 'si' 
+    ? "IMPORTANT: All output text MUST be strictly in Sinhala language (සිංහල)." 
+    : "All output text MUST be in English.";
+
+  const prompt = `
+    Master Astrologer: Provide a comprehensive 12-month birth chart reading.
+    Calculate the Zodiac sign using the VEDIC (SIDEREAL/NIRAYANA) system.
+    
+    User: ${details.name}, Born: ${details.birthDate} at ${details.birthTime} in ${details.birthLocation}.
+    Start Date: ${currentMonthName} ${currentYear}.
+    
+    ${langInstruction}
+    
+    REQUIREMENTS:
+    - 'zodiacSign': The Sun Sign (Rashi) in English.
+    - 'prediction': Long-form analysis (approx 400 words).
+    - 'monthlyBreakdown': 12 months with highlights.
+  `;
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+      thinkingConfig: { thinkingBudget: 0 }, 
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          zodiacSign: { type: Type.STRING },
+          symbol: { type: Type.STRING },
+          prediction: { type: Type.STRING },
+          monthlyBreakdown: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                month: { type: Type.STRING },
+                highlight: { type: Type.STRING }
+              },
+              required: ["month", "highlight"]
+            }
+          }
+        },
+        required: ["zodiacSign", "symbol", "prediction", "monthlyBreakdown"]
+      }
+    }
+  });
+
+  const text = response.text;
+  if (!text) throw new Error('Oracle returned an empty signal.');
+  return JSON.parse(text) as PredictionData;
+}
+
+/**
+ * Chat interface message sending.
+ */
+export async function sendChatMessage(
+  message: string, 
+  history: Message[], 
+  userDetails: UserDetails, 
+  prediction: PredictionData,
+  currentLanguage: Language
+): Promise<string> {
+  const apiKey = getApiKey();
+  const ai = new GoogleGenAI({ apiKey });
+  
+  const systemInstruction = `You are the Cosmic Oracle for ${userDetails.name}. Respond in ${currentLanguage === 'si' ? 'Sinhala' : 'English'}. Vedic context: ${prediction.prediction}.`;
+
+  const chat = ai.chats.create({
+    model: 'gemini-3-flash-preview',
+    config: { systemInstruction, thinkingConfig: { thinkingBudget: 0 } },
+    history: history.map(m => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }]
+    }))
+  });
+
+  const response = await chat.sendMessage({ message });
+  return response.text || "The stars are silent.";
+}

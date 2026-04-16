@@ -1,81 +1,88 @@
+
 export type Language = 'en' | 'si';
 
-export type AppView = 
-  'DAILY' | 
-  'HOME' | 
-  'SIGN_DETAIL' | 
-  'FORM' | 
-  'RESULT' | 
-  'MATCH_FORM' | 
-  'MATCH_RESULT' | 
-  'HOW_TO' | 
-  'ABOUT' | 
-  'PRIVACY' | 
-  'TERMS';
+export type AppView = 'HOME' | 'SIGN_DETAIL' | 'FORM' | 'RESULT' | 'MATCH_FORM' | 'MATCH_RESULT' | 'DAILY';
 
 export interface UserDetails {
   name: string;
-  dob: string; // YYYY-MM-DD
-  tob: string; // HH:MM
-  country: string;
-  city: string;
-  gender: 'male' | 'female' | 'other';
+  birthDate: string;
+  birthTime: string;
+  birthLocation: string;
+  birthState: string;
+  birthCountry: string;
+  language: Language;
+  additionalContext?: string;
 }
 
 export interface MatchDetails {
-  name1: string;
-  dob1: string;
-  tob1: string;
-  country1: string;
-  city1: string;
-  gender1: 'male' | 'female' | 'other';
-  name2: string;
-  dob2: string;
-  tob2: string;
-  country2: string;
-  city2: string;
-  gender2: 'male' | 'female' | 'other';
+  person1: UserDetails;
+  person2: UserDetails;
 }
 
 export interface PredictionData {
-  horoscope: string;
-  luckyNumbers: number[];
-  luckyColor: string;
-  compatibility: string;
-  mood: string;
-  career: string;
-  travel: string;
-  health: string;
-  emotions: string;
-  personalLife: string;
-  finance: string;
-  summary: string;
+  zodiacSign: string;
+  symbol: string;
+  prediction: string;
+  monthlyBreakdown: { month: string; highlight: string }[];
 }
 
 export interface MatchPrediction {
-  compatibilityScore: number;
-  strengths: string[];
-  challenges: string[];
-  advice: string;
+  score: number;
   summary: string;
+  categories: {
+    emotional: string;
+    physical: string;
+    intellectual: string;
+    spiritual: string;
+  };
+  conclusion: string;
 }
 
 export interface SignCategoryPrediction {
-  id: string;
-  name: string;
-  dateRange: string;
+  sign: string;
   symbol: string;
-  element: string;
-  rulingPlanet: string;
-  traits: string[];
-  prediction: string;
-  compatibilitySigns: string[];
+  categories: {
+    general: string;
+    love: string;
+    money: string;
+    career: string;
+    education: string;
+    health: string;
+  };
 }
 
-export interface NavButton {
-  id: string;
-  label: string;
-  action: () => void;
-  gradient: string;
-  active: boolean;
+export interface DailyPrediction {
+  sign: string;
+  prediction: string;
+  luckyColor: string;
+  luckyNumber: string;
+  mood: string;
+  celestialTip: string;
 }
+
+export interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface ZodiacSignInfo {
+  id: string;
+  en: string;
+  si: string;
+  symbol: string;
+}
+
+export const ZODIAC_SIGNS: ZodiacSignInfo[] = [
+  { id: 'aries', en: 'Aries', si: 'මේෂ', symbol: '♈' },
+  { id: 'taurus', en: 'Taurus', si: 'වෘෂභ', symbol: '♉' },
+  { id: 'gemini', en: 'Gemini', si: 'මිථුන', symbol: '♊' },
+  { id: 'cancer', en: 'Cancer', si: 'කටක', symbol: '♋' },
+  { id: 'leo', en: 'Leo', si: 'සිංහ', symbol: '♌' },
+  { id: 'virgo', en: 'Virgo', si: 'කන්‍යා', symbol: '♍' },
+  { id: 'libra', en: 'Libra', si: 'තුලා', symbol: '♎' },
+  { id: 'scorpio', en: 'Scorpio', si: 'වෘශ්චික', symbol: '♏' },
+  { id: 'sagittarius', en: 'Sagittarius', si: 'ධනු', symbol: '♐' },
+  { id: 'capricorn', en: 'Capricorn', si: 'මකර', symbol: '♑' },
+  { id: 'aquarius', en: 'Aquarius', si: 'කුම්භ', symbol: '♒' },
+  { id: 'pisces', en: 'Pisces', si: 'මීන', symbol: '♓' },
+];

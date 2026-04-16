@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Language } from '../../types';
+import { Language } from '../types.js';
 
 interface LoaderProps {
   language: Language;

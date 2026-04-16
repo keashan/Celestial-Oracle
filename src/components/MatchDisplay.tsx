@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MatchPrediction, MatchDetails, Language } from '../../types';
+import { MatchPrediction, MatchDetails, Language } from '../types.js';
 
 interface MatchDisplayProps {
   prediction: MatchPrediction;

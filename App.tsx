@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { UserDetails, PredictionData, Language, AppView, SignCategoryPrediction, MatchDetails, MatchPrediction } from './types';
-import { getAstrologyPrediction, getAllSignPredictions, getHoroscopeMatch } from './services/geminiService';
+import { UserDetails, PredictionData, Language, AppView, SignCategoryPrediction, MatchDetails, MatchPrediction } from './src/types.js';
+import { getAstrologyPrediction, getAllSignPredictions, getHoroscopeMatch } from './src/services/geminiService.js';
 import AstroForm from './src/components/AstroForm';
 import MatchForm from './src/components/MatchForm';
 import PredictionDisplay from './src/components/PredictionDisplay';

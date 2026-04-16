@@ -1,5 +1,5 @@
-import { getDailyPredictions } from "../../services/geminiService";
-import { ZODIAC_SIGNS } from "../../types";
+import { getDailyPredictions } from "../../src/services/geminiService.js";
+import { ZODIAC_SIGNS } from "../../src/types.js";
 
 export const config = {
   maxDuration: 60,
