@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { Language } from '../../types.ts';
+import { Language } from '../../types';
 
 interface AdOverlayProps {
   onComplete: () => void;

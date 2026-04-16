@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Language, ZODIAC_SIGNS } from '../../types.ts';
+import { Language, ZODIAC_SIGNS } from '../../types';
 
 interface ZodiacHomeProps {
   language: Language;

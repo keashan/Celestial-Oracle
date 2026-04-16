@@ -1,5 +1,5 @@
 import React from 'react';
-import { Language } from '../../types.ts';
+import { Language } from '../../types';
 
 interface HowToProps {
   language: Language;

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Language } from '../../types.ts';
+import { Language } from '../../types';
 
 interface DisclaimerProps {
   language: Language;

@@ -1,8 +1,8 @@
 
 import React, { useEffect, useState } from 'react';
-import { DailyPrediction, Language, ZODIAC_SIGNS } from '../../types.ts';
-import { getDailyPredictions } from '../../services/geminiService.ts';
-import Loader from './Loader.tsx';
+import { DailyPrediction, Language, ZODIAC_SIGNS } from '../../types';
+import { getDailyPredictions } from '../../services/geminiService';
+import Loader from './Loader';
 
 interface DailyDestinyProps {
   language: Language;

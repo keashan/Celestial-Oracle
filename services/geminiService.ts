@@ -1,7 +1,7 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { UserDetails, PredictionData, Language, Message, SignCategoryPrediction, MatchDetails, MatchPrediction, DailyPrediction } from "../types.ts";
-import { db } from "./firebase.ts";
+import { UserDetails, PredictionData, Language, Message, SignCategoryPrediction, MatchDetails, MatchPrediction, DailyPrediction } from "../types";
+import { db } from "./firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
 /**
