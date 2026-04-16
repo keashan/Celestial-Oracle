@@ -12,7 +12,7 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.VITE_API_KEY || process.env.API_KEY;
     const pageId = process.env.FB_PAGE_ID;
     const pageToken = process.env.FB_PAGE_ACCESS_TOKEN;
 
