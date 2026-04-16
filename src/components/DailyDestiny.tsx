@@ -70,6 +70,15 @@ const DailyDestiny: React.FC<DailyDestinyProps> = ({ language }) => {
                 {data.prediction}
               </p>
 
+              {data.celestialTip && (
+                <div className="mb-4 p-3 bg-purple-500/10 rounded-xl border border-purple-500/20">
+                  <p className="text-[10px] uppercase tracking-widest text-purple-300 font-bold mb-1">
+                    {language === 'si' ? 'විශ්වීය උපදෙස' : 'Celestial Tip'}
+                  </p>
+                  <p className="text-xs text-white/90 italic">"{data.celestialTip}"</p>
+                </div>
+              )}
+
               <div className="grid grid-cols-3 gap-2 text-[10px] border-t border-white/10 pt-4 text-white/60">
                 <div className="text-center">
                    <div className="uppercase tracking-widest text-[8px] opacity-50 mb-1">{language === 'si' ? 'වර්ණය' : 'Color'}</div>

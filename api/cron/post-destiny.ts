@@ -1,7 +1,8 @@
-import { GoogleGenAI, ThinkingLevel } from "@google/genai";
+import { getDailyPredictions } from "../../services/geminiService.ts";
+import { ZODIAC_SIGNS } from "../../types.ts";
 
 export const config = {
-  maxDuration: 60, // Gemini can take a while
+  maxDuration: 60,
 };
 
 export default async function handler(req: any, res: any) {
@@ -12,51 +13,65 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const apiKey = process.env.VITE_API_KEY || process.env.API_KEY;
     const pageId = process.env.FB_PAGE_ID;
     const pageToken = process.env.FB_PAGE_ACCESS_TOKEN;
 
-    if (!apiKey || !pageId || !pageToken) {
-      throw new Error("Missing environment variables (GEMINI_API_KEY, FB_PAGE_ID, or FB_PAGE_ACCESS_TOKEN)");
+    if (!pageId || !pageToken) {
+      throw new Error("Missing environment variables (FB_PAGE_ID or FB_PAGE_ACCESS_TOKEN)");
     }
 
-    const genAI = new GoogleGenAI({ apiKey });
+    // 2. Get Daily Predictions for both languages (Uses Firestore Cache automatically)
+    const [predictionsEn, predictionsSi] = await Promise.all([
+      getDailyPredictions('en'),
+      getDailyPredictions('si')
+    ]);
     
-    // 2. Generate the Daily Destiny
-    const prompt = `Generate a mystical "Today's Destiny" prediction for a Facebook post. 
-    Include:
-    - A general horoscope summary for the day.
-    - Lucky numbers.
-    - Lucky color.
-    - A short piece of advice.
-    
-    The response must be a JSON object with a "message" field containing the full formatted text for the post. 
-    Use emojis to make it look celestial and engaging.
-    Language: English.`;
+    // 3. Pick a random sign
+    const randomSign = ZODIAC_SIGNS[Math.floor(Math.random() * ZODIAC_SIGNS.length)];
+    const dataEn = predictionsEn[randomSign.id];
+    const dataSi = predictionsSi[randomSign.id];
 
-    const response = await genAI.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: [{ parts: [{ text: prompt }] }],
-      config: {
-        responseMimeType: "application/json",
-        thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH }
-      }
-    });
-
-    const responseText = response.text;
-    if (!responseText) {
-      throw new Error("No response from Gemini");
+    if (!dataEn || !dataSi) {
+      throw new Error(`Missing predictions for sign: ${randomSign.id}`);
     }
-    const prediction = JSON.parse(responseText);
-    const postMessage = prediction.message;
 
-    // 3. Post to Facebook
-    const fbUrl = `https://graph.facebook.com/v19.0/${pageId}/feed`;
+    // 4. Format the Facebook Post (Sinhala + English)
+    const postMessage = `✨ අද දවසේ දෛවය ✨
+
+🌌 **${randomSign.si} ලග්නය සඳහා පොදු අනාවැකිය:** ${dataSi.prediction}
+
+🔮 **වාසනාවන්ත අංක:** ${dataSi.luckyNumber}
+🎨 **වාසනාවන්ත වර්ණය:** ${dataSi.luckyColor}
+🧘 **මනෝභාවය:** ${dataSi.mood}
+✨ **විශ්වීය උපදෙස:** ${dataSi.celestialTip}
+
+---
+
+✨ TODAY'S DESTINY ✨
+
+🌌 **General Forecast for ${randomSign.en}:** ${dataEn.prediction}
+
+🔮 **Lucky Numbers:** ${dataEn.luckyNumber}
+🎨 **Lucky Color:** ${dataEn.luckyColor}
+🧘 **Mood:** ${dataEn.mood}
+✨ **Celestial Tip:** ${dataEn.celestialTip}
+
+🙏 Trust the whispers of the universe. Your path is unfolding exactly as it should. ✨
+
+ඔබේ සම්පූර්ණ කේන්ද්‍ර පලාපල පරීක්ෂා කර ගැනීමට පිවිසෙන්න:
+Explore your full birth chart at:
+https://palapala.ktktools.net
+
+#CosmicOracle #DailyHoroscope #DailyDestiny #SinhalaAstrology #Zodiac #${randomSign.en} #${randomSign.si}`;
+
+    // 5. Post to Facebook with Image (using the app logo as the featured image)
+    const fbUrl = `https://graph.facebook.com/v19.0/${pageId}/photos`;
     const fbResponse = await fetch(fbUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        message: postMessage,
+        url: "https://i.imgur.com/JUYyd8A.png", // Using the app logo as requested
+        caption: postMessage,
         access_token: pageToken,
       }),
     });
@@ -70,6 +85,7 @@ export default async function handler(req: any, res: any) {
     return res.status(200).json({ 
       success: true, 
       postId: fbData.id,
+      sign: randomSign.en,
       message: "Daily destiny posted successfully!" 
     });
 

@@ -8,7 +8,7 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
  * Gets the API key from environment or bridge.
  */
 function getApiKey(): string {
-  const key = process.env.API_KEY || (import.meta as any).env?.VITE_API_KEY;
+  const key = process.env.API_KEY || (import.meta as any).env?.VITE_API_KEY || process.env.VITE_API_KEY;
   if (!key) {
     throw new Error('API_KEY is not configured in the environment.');
   }
@@ -167,21 +167,23 @@ export async function getDailyPredictions(language: Language): Promise<Record<st
       prediction: { type: Type.STRING },
       luckyColor: { type: Type.STRING },
       luckyNumber: { type: Type.STRING },
-      mood: { type: Type.STRING }
+      mood: { type: Type.STRING },
+      celestialTip: { type: Type.STRING }
     },
-    required: ["sign", "prediction", "luckyColor", "luckyNumber", "mood"]
+    required: ["sign", "prediction", "luckyColor", "luckyNumber", "mood", "celestialTip"]
   };
 
   const prompt = `
-    Generate a brief DAILY Horoscope for ALL 12 Zodiac signs for today: ${dateStr}.
-    Use Vedic principles.
+    Generate a detailed DAILY Horoscope for ALL 12 Zodiac signs for today: ${dateStr}.
+    Use Vedic principles and provide deep cosmic insights.
     ${langInstruction}
     
     For each sign provide:
-    - prediction: 2 sentences of guidance.
-    - luckyColor: A color name.
-    - luckyNumber: A single number.
-    - mood: One word describing the day's vibe.
+    - prediction: A detailed 4-5 sentence analysis of the day's energy, covering personal growth and cosmic alignment.
+    - luckyColor: A specific color name.
+    - luckyNumber: A single lucky number.
+    - mood: A descriptive word for the day's emotional state.
+    - celestialTip: A unique, mystical piece of advice or a ritual for the day.
   `;
 
   const response = await ai.models.generateContent({

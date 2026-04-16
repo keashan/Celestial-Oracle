@@ -57,6 +57,7 @@ export interface DailyPrediction {
   luckyColor: string;
   luckyNumber: string;
   mood: string;
+  celestialTip: string;
 }
 
 export interface Message {
