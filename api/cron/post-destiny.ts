@@ -64,14 +64,13 @@ https://palapala.ktktools.net
 
 #CosmicOracle #DailyHoroscope #DailyDestiny #SinhalaAstrology #Zodiac #${randomSign.en} #${randomSign.si}`;
 
-    // 5. Post to Facebook with Image (using the app logo as the featured image)
-    const fbUrl = `https://graph.facebook.com/v19.0/${pageId}/photos`;
+    // 5. Post to Facebook (Feed post without image)
+    const fbUrl = `https://graph.facebook.com/v19.0/${pageId}/feed`;
     const fbResponse = await fetch(fbUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        url: "https://i.imgur.com/JUYyd8A.png", // Using the app logo as requested
-        caption: postMessage,
+        message: postMessage,
         access_token: pageToken,
       }),
     });
